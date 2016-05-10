@@ -59,7 +59,7 @@ var UserSchema = new Schema({
   username: {
     type: String,
     unique: true,
-    required: true,
+    required: false,
     get: escapeProperty
   },
   roles: {
@@ -73,6 +73,16 @@ var UserSchema = new Schema({
   provider: {
     type: String,
     default: 'local'
+  },
+  tours: {
+    challengeView: {
+      type: Boolean,
+      default: true // false means tour was seen
+    },
+    challengeList: {
+      type: Boolean,
+      default: true
+    }
   },
   salt: String,
   resetPasswordToken: String,
@@ -100,9 +110,16 @@ UserSchema.virtual('password').set(function(password) {
  * Pre-save hook
  */
 UserSchema.pre('save', function(next) {
-  if (this.isNew && this.provider === 'local' && this.password && !this.password.length)
+  var self = this;
+  if (this.isNew && this.provider === 'local' && this.password && !this.password.length) {
     return next(new Error('Invalid password'));
+  }
+  // generate username from email
+  if (!self.username) {
+    self.username = this.email.split('@')[0];
+  }
   next();
+
 });
 
 /**

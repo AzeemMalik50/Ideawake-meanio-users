@@ -3,17 +3,27 @@
 var config = require('meanio').loadConfig();
 var jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
-module.exports = function(MeanUser, app, auth, database, passport) {
+var hasAuthorization = function(req, res, next) {
+  if (!req.user.isAdmin || req.user._id.equals(req.user._id)) {
+    return res.status(401).send('User is not authorized');
+  }
+  next();
+};
+
+module.exports = function(MeanUser, app, circles, database, passport) {
 
   // User routes use users controller
   var users = require('../controllers/users')(MeanUser);
 
   app.use(users.loadUser);
 
+  var loginPage = config.public.loginPage;
+
   app.route('/api/logout')
     .get(users.signout);
   app.route('/api/users/me')
-    .get(users.me);
+    .get(users.me)
+    .put(hasAuthorization, users.update);
 
   // Setting up the userId param
   app.param('userId', users.user);
@@ -43,7 +53,7 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       app.route('/api/login')
         .post(passport.authenticate('local', {
           failureFlash: false
-        }), function(req, res) {      
+        }), function(req, res) {
           var payload = req.user;
           payload.redirect = req.body.redirect;
           var escaped = JSON.stringify(payload);      
@@ -58,7 +68,7 @@ module.exports = function(MeanUser, app, auth, database, passport) {
           });
           res.json({
             token: token,
-            redirect: config.strategies.landingPage
+            redirect: req.body.redirect || config.strategies.landingPage
           });
         });
   }
@@ -88,12 +98,12 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       app.route('/api/auth/facebook')
         .get(passport.authenticate('facebook', {
           scope: ['email', 'user_about_me'],
-          failureRedirect: '/auth/login',
+          failureRedirect: loginPage,
         }), users.signin);
 
       app.route('/api/auth/facebook/callback')
         .get(passport.authenticate('facebook', {
-          failureRedirect: '/auth/login',
+          failureRedirect: loginPage,
         }), users.authCallback);
   }
 
@@ -102,26 +112,26 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       // Setting the github oauth routes
       app.route('/api/auth/github')
         .get(passport.authenticate('github', {
-          failureRedirect: '/auth/login'
+          failureRedirect: loginPage
         }), users.signin);
 
       app.route('/api/auth/github/callback')
         .get(passport.authenticate('github', {
-          failureRedirect: '/auth/login'
+          failureRedirect: loginPage
         }), users.authCallback);
   }
 
   if(config.strategies.twitter.enabled)
-  {    
+  {
       // Setting the twitter oauth routes
       app.route('/api/auth/twitter')
         .get(passport.authenticate('twitter', {
-          failureRedirect: '/auth/login'
+          failureRedirect: loginPage
         }), users.signin);
 
       app.route('/api/auth/twitter/callback')
         .get(passport.authenticate('twitter', {
-          failureRedirect: '/auth/login'
+          failureRedirect: loginPage
         }), users.authCallback);
   }
 
@@ -130,7 +140,7 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       // Setting the google oauth routes
       app.route('/api/auth/google')
         .get(passport.authenticate('google', {
-          failureRedirect: '/auth/login',
+          failureRedirect: loginPage,
           scope: [
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email'
@@ -139,7 +149,7 @@ module.exports = function(MeanUser, app, auth, database, passport) {
 
       app.route('/api/auth/google/callback')
         .get(passport.authenticate('google', {
-          failureRedirect: '/auth/login'
+          failureRedirect: loginPage
         }), users.authCallback);
   }
 
@@ -148,13 +158,13 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       // Setting the linkedin oauth routes
       app.route('/api/auth/linkedin')
         .get(passport.authenticate('linkedin', {
-          failureRedirect: '/auth/login',
+          failureRedirect: loginPage,
           scope: ['r_emailaddress']
         }), users.signin);
 
       app.route('/api/auth/linkedin/callback')
         .get(passport.authenticate('linkedin', {
-          failureRedirect: '/auth/login'
+          failureRedirect: loginPage
         }), users.authCallback);
   }
 

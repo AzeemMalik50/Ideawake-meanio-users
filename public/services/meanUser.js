@@ -120,7 +120,8 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         password: user.password,
         confirmPassword: user.confirmPassword,
         username: user.username,
-        name: user.name
+        name: user.name,
+        roles: user.roles
       })
         .success(this.onIdentity.bind(this))
         .error(this.onIdFail.bind(this));

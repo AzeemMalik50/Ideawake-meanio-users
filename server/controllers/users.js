@@ -209,7 +209,7 @@ module.exports = function(MeanUser) {
 
                     // We are sending the payload inside the token
                     var token = jwt.sign(escaped, config.secret);
-                    res.json({ 
+                    res.json({
                       token: token,
                       redirect: config.strategies.landingPage
                     });
@@ -254,6 +254,16 @@ module.exports = function(MeanUser) {
                 req.profile = user;
                 next();
             });
+        },
+        search: function(req,res) {
+          var searchObj = {};
+          if(req.query.hasRole){
+            searchObj.roles = {$in :[req.query.hasRole]};
+          }
+          console.log('user.searchObj', searchObj, req.query);
+          User.find(searchObj).sort('username').exec(function(err, users){
+            res.send(users);
+          });
         },
         /**
        * Loads a user into the request

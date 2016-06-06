@@ -28,6 +28,8 @@ module.exports = function(MeanUser, app, circles, database, passport) {
   // Setting up the userId param
   app.param('userId', users.user);
 
+  app.route('/api/users')
+    .get(users.search);
   // AngularJS route to check for authentication
   app.route('/api/loggedin').get(users.loggedin);
 
@@ -50,7 +52,7 @@ module.exports = function(MeanUser, app, circles, database, passport) {
         }), function(req, res) {
           var payload = req.user;
           payload.redirect = req.body.redirect;
-          var escaped = JSON.stringify(payload);      
+          var escaped = JSON.stringify(payload);
           escaped = encodeURI(escaped);
           // We are sending the payload inside the token
           var token = jwt.sign(escaped, config.secret);

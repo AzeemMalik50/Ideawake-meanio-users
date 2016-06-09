@@ -35,16 +35,20 @@ module.exports = function(MeanUser) {
          * Auth callback
          */
         authCallback: function(req, res) {
-          var payload = req.user;
-          var escaped = JSON.stringify(payload);
-          escaped = encodeURI(escaped);
-          // We are sending the payload inside the token
-          var token = jwt.sign(escaped, config.secret);
-          res.cookie('token', token);
-          var destination = config.strategies.landingPage;
-          if(!req.cookies.redirect)
-            res.cookie('redirect', destination);
-          res.redirect(destination);
+            var payload = req.user;
+            var escaped = JSON.stringify(payload);
+            escaped = encodeURI(escaped);
+            // We are sending the payload inside the token
+            var token = jwt.sign(escaped, config.secret);
+
+            res.cookie('token', token);
+
+            var destination = req.redirect || config.strategies.landingPage;
+
+            if(!req.cookies.redirect) {
+                res.cookie('redirect', destination);
+                res.redirect(destination);
+            }
         },
 
         /**
@@ -254,16 +258,6 @@ module.exports = function(MeanUser) {
                 req.profile = user;
                 next();
             });
-        },
-        search: function(req,res) {
-          var searchObj = {};
-          if(req.query.hasRole){
-            searchObj.roles = {$in :[req.query.hasRole]};
-          }
-          console.log('user.searchObj', searchObj, req.query);
-          User.find(searchObj).sort('username').exec(function(err, users){
-            res.send(users);
-          });
         },
         /**
        * Loads a user into the request

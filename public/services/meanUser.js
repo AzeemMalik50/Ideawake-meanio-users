@@ -215,7 +215,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
     };
     MeanUserKlass.prototype.search = function(){
       var deferred = $q.defer();
-      $http.get('/api/user').sucess(function(result) {
+      $http.get('/api/user').success(function(result) {
         console.log('searched user result', result);
       }, function(error) {
         console.log('searched user error', error);

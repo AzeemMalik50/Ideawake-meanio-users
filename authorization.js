@@ -18,6 +18,8 @@ var findUser = exports.findUser = function(id, cb) {
  * Generic require login routing middleware
  */
 exports.requiresLogin = function(req, res, next) {
+  //console.log(".................................Checking auth.requiresLogin.................................");
+
   if (!req.isAuthenticated()) {
     return res.status(401).send('User is not authorized');
   }

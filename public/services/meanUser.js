@@ -65,28 +65,50 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
 
     MeanUserKlass.prototype.onIdentity = function(response) {
       if (!response) return;
+
       var encodedUser, user, destination;
+
       if (angular.isDefined(response.token)) {
         localStorage.setItem('JWT', response.token);
         encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
         user = JSON.parse(encodedUser);
       }
+
       destination = angular.isDefined(response.redirect) ? response.redirect : destination;
+
+      //console.log("DESTINATiON IS: " + destination);
+
       this.user = user || response;
       this.loggedin = true;
       this.loginError = 0;
       this.registerError = 0;
-      this.isAdmin = this.user.roles.indexOf('admin') > -1;
+
+      if(this.user.roles) {
+        this.isAdmin = this.user.roles.indexOf('admin') > -1;
+      } else {
+        this.isAdmin = false;
+      }
+
       var userObj = this.user;
       var self = this;
       // Add circles info to user
       $http.get('/api/circles/mine').success(function(acl) {
         self.acl = acl;
-        if (destination) {
+
+         if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
+
+          var redirect = $cookies.get('redirect');
+
+          $cookies.remove('redirect');
+          $location.path(redirect);
+
+        } else if (destination) {
           $location.path(destination);
         }
+
         $rootScope.$emit('loggedin', userObj);
         Global.authenticate(userObj);
+
       });
     };
 
@@ -102,9 +124,23 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
 
     var MeanUser = new MeanUserKlass();
 
+    // MeanUserKlass.prototype.login = function (user) {
+    //   // this is an ugly hack due to mean-admin needs
+    //   var destination = $location.path().indexOf('/login') === -1 ? $location.absUrl() : false;
+    //   $http.post('/api/login', {
+    //       email: user.email,
+    //       password: user.password,
+    //       redirect: destination
+    //     })
+    //     .success(this.onIdentity.bind(this))
+    //     .error(this.onIdFail.bind(this));
+    // };
+
+
     MeanUserKlass.prototype.login = function (user) {
-      // this is an ugly hack due to mean-admin needs
-      var destination = $location.path().indexOf('/login') === -1 ? $location.absUrl() : false;
+
+      var destination = (user.redirect && user.redirect !== '/auth/login') ? user.redirect : false;
+
       $http.post('/api/login', {
           email: user.email,
           password: user.password,
@@ -161,14 +197,18 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
     MeanUserKlass.prototype.checkLoggedin = function() {
      var deferred = $q.defer();
 
+      // console.log("checkLoggedin");
+
       // Make an AJAX call to check if the user is logged in
       $http.get('/api/loggedin').success(function(user) {
         // Authenticated
-        if (user !== '0') $timeout(deferred.resolve);
-
+        if (user !== '0') {
+          $timeout(deferred.resolve);
         // Not Authenticated
-        else {
+        } else {
+          // console.log("No User");
           $cookies.put('redirect', $location.path());
+          // console.log("Cookies", $cookies.getAll());
           $timeout(deferred.reject);
           $location.url($meanConfig.loginPage);
         }
@@ -199,6 +239,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
     MeanUserKlass.prototype.checkAdmin = function() {
      var deferred = $q.defer();
 
+      //console.log("checkAdmin");
       // Make an AJAX call to check if the user is logged in
       $http.get('/api/loggedin').success(function(user) {
         // Authenticated

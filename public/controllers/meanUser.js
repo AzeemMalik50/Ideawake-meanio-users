@@ -16,13 +16,64 @@ angular.module('mean.users')
         });
     }
   ])
-  .controller('LoginCtrl', ['$rootScope', 'MeanUser',
-    function($rootScope, MeanUser) {
-      var vm = this;
+  // .run(['$rootScope','$location', '$document',
+  //   function($rootScope, $location, $document) {
 
-      // This object will be filled by the form
+  //     console.log(" I am running ");
+
+  //     $rootScope.$on('$routeChangeSuccess', function(next, cur) {
+
+  //       console.log("Next Path");
+  //        //  console.log(next.path());
+
+  //        // if (next.path() == 'auth/login') {
+  //        //    $rootScope.savedRoute = $location.path();
+  //        //    // $rootScope.savedParams = $routeParams;
+  //        // }
+  //     });
+  //   }
+  // ])
+  // Original controller:
+  // .controller('LoginCtrl', ['$rootScope', 'MeanUser',
+  //   function($rootScope, MeanUser) {
+  //     var vm = this;
+
+  //     // This object will be filled by the form
+  //     vm.user = {};
+
+  //     vm.input = {
+  //       type: 'password',
+  //       placeholder: 'Password',
+  //       confirmPlaceholder: 'Repeat Password',
+  //       iconClass: '',
+  //       tooltipText: 'Show password'
+  //     };
+
+  //     vm.togglePasswordVisible = function() {
+  //       vm.input.type = vm.input.type === 'text' ? 'password' : 'text';
+  //       vm.input.placeholder = vm.input.placeholder === 'Password' ? 'Visible Password' : 'Password';
+  //       vm.input.iconClass = vm.input.iconClass === 'icon_hide_password' ? '' : 'icon_hide_password';
+  //       vm.input.tooltipText = vm.input.tooltipText === 'Show password' ? 'Hide password' : 'Show password';
+  //     };
+
+  //     $rootScope.$on('loginfailed', function(){
+  //       vm.loginError = MeanUser.loginError;
+  //     });
+
+  //     // Register the login() function
+  //     vm.login = function() {
+  //       MeanUser.login(this.user);
+  //     };
+  //   }
+  // ])
+  // Updated redirect controller
+  .controller('LoginCtrl', ['$rootScope', 'MeanUser', '$location', '$http',
+    function($rootScope, MeanUser, $location, $http) {
+
+      var vm = this;
       vm.user = {};
-      
+      var query = $location.search();
+
       vm.input = {
         type: 'password',
         placeholder: 'Password',
@@ -44,7 +95,15 @@ angular.module('mean.users')
 
       // Register the login() function
       vm.login = function() {
+
+        if(query.redirect) {
+          this.user.redirect = query.redirect;
+        } else {
+          this.user.redirect = false;
+        }
+
         MeanUser.login(this.user);
+
       };
     }
   ])
@@ -53,7 +112,7 @@ angular.module('mean.users')
       var vm = this;
 
       vm.user = {};
-      
+
       vm.registerForm = MeanUser.registerForm = true;
 
       vm.input = {
@@ -91,7 +150,7 @@ angular.module('mean.users')
   .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope',
     function(MeanUser, $rootScope) {
       var vm = this;
-      vm.user = {};      
+      vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;
       vm.forgotpassword = function() {
         MeanUser.forgotpassword(this.user);
@@ -104,7 +163,7 @@ angular.module('mean.users')
   .controller('ResetPasswordCtrl', ['MeanUser',
     function(MeanUser) {
       var vm = this;
-      vm.user = {};      
+      vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;
       vm.resetpassword = function() {
         MeanUser.resetpassword(this.user);

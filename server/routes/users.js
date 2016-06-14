@@ -28,8 +28,6 @@ module.exports = function(MeanUser, app, circles, database, passport) {
   // Setting up the userId param
   app.param('userId', users.user);
 
-  app.route('/api/users')
-    .get(users.search);
   // AngularJS route to check for authentication
   app.route('/api/loggedin').get(users.loggedin);
 
@@ -50,22 +48,51 @@ module.exports = function(MeanUser, app, circles, database, passport) {
         .post(passport.authenticate('local', {
           failureFlash: false
         }), function(req, res) {
+
           var payload = req.user;
-          payload.redirect = req.body.redirect;
-          var escaped = JSON.stringify(payload);
-          escaped = encodeURI(escaped);
-          // We are sending the payload inside the token
-          var token = jwt.sign(escaped, config.secret);
+          var escaped;
+          var token;
+
           MeanUser.events.publish({
             action: 'logged_in',
             user: {
                 name: req.user.name
             }
           });
-          res.json({
-            token: token,
-            redirect: req.body.redirect || config.strategies.landingPage
-          });
+
+          if (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) {
+              // res.redirect(req.query.redirect);
+              var redirect =  req.body.redirect;
+
+              payload.redirect = redirect;
+
+              escaped = JSON.stringify(payload);
+
+              escaped = encodeURI(escaped);
+
+              token = jwt.sign(escaped, config.secret);
+
+              res.json({
+                  token: token,
+                  user: req.user,
+                  redirect: redirect
+              });
+
+          } else {
+
+              escaped = JSON.stringify(payload);
+
+              escaped = encodeURI(escaped);
+
+              token = jwt.sign(escaped, config.secret);
+
+              res.json({
+                  token: token,
+                  user: req.user,
+                  redirect: config.strategies.landingPage
+              });
+          }
+
         });
   }
 

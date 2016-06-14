@@ -213,7 +213,15 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
 
       return deferred.promise;
     };
+    MeanUserKlass.prototype.search = function(){
+      var deferred = $q.defer();
+      $http.get('/api/user').sucess(function(result) {
+        console.log('searched user result', result);
+      }, function(error) {
+        console.log('searched user error', error);
+      });
 
+    };
     return MeanUser;
   }
 ]);

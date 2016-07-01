@@ -28,6 +28,9 @@ module.exports = function(MeanUser, app, circles, database, passport) {
   // Setting up the userId param
   app.param('userId', users.user);
 
+  app.route('/api/users')
+    .get(users.search);
+
   // AngularJS route to check for authentication
   app.route('/api/loggedin').get(users.loggedin);
 

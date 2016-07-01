@@ -7,8 +7,12 @@ var mongoose = require('mongoose'),
   GitHubStrategy = require('passport-github').Strategy,
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
   LinkedinStrategy = require('passport-linkedin').Strategy,
+  SlackStrategy = require('passport-slack').Strategy,
   User = mongoose.model('User'),
   config = require('meanio').loadConfig();
+  // PlatformSetting = mongoose.model('PlatformSetting');
+
+  //platformSettings = require('meanio').getPlatformSettings();
 
 module.exports = function(passport) {
   // Serialize the user id to push into the session
@@ -224,5 +228,62 @@ module.exports = function(passport) {
       });
     }
   ));
-  return passport;
+
+
+    var db = mongoose.connection;
+    var collection = db.collection('platformsettings');
+    var platformSettings = {};
+    platformSettings.slackapi = {};
+    platformSettings.slackapi.oauth_clientId = 'what';
+    platformSettings.slackapi.oauth_clientSecret = 'what';
+
+    collection.find().toArray(function(err, result) {
+      // here ...
+      //  console.log(platformSettings);
+      if(result) {
+      // console.log(result[0]);
+        platformSettings = result[0];
+      }
+      // use slack strategy
+      passport.use(
+        new SlackStrategy({
+          clientID: platformSettings.slackapi.oauth_clientId,
+          clientSecret: platformSettings.slackapi.oauth_clientSecret,
+          callbackURL: config.hostname + '/api/auth/slack/callback',
+          scope: "users:read"
+        },
+
+        function(accessToken, refreshToken, profile, done) {
+          // console.log(profile);
+          var slackProfile = profile._json.info.user;
+          User.findOne({
+            'email': slackProfile.profile.email
+          }, function(err, user) {
+            if (user) {
+              return done(err, user);
+            }
+            user = new User({
+              name: profile.displayName,
+              email: slackProfile.profile.email,
+              username: slackProfile.profile.real_name,
+              provider: 'slack',
+              slack: profile._json,
+              roles: ['authenticated']
+            });
+            user.save(function(err) {
+              if (err) {
+                console.log(err);
+                return done(null, false, {message: 'Slack login failed, email already used by other login strategy'});
+              } else {
+                return done(err, user);
+              }
+            });
+          });
+        }
+      ));
+
+      return passport;
+    });
+
+
 };

@@ -191,4 +191,20 @@ module.exports = function(MeanUser, app, circles, database, passport) {
         }), users.authCallback);
   }
 
+
+  if(config.strategies.slack.enabled)
+  {
+      // Setting the facebook oauth routes
+      app.route('/api/auth/slack')
+        .get(passport.authenticate('slack', {
+          scope: ['users:read'],
+          failureRedirect: loginPage,
+        }), users.signin);
+
+      app.route('/api/auth/slack/callback')
+        .get(passport.authenticate('slack', {
+          failureRedirect: loginPage,
+        }), users.authCallback);
+  }
+
 };

@@ -241,11 +241,11 @@ module.exports = function(passport) {
     collection.find().toArray(function(err, result) {
       // here ...
       //  console.log(platformSettings);
-      if(result) {
+      if(result && result.length > 0) {
           // console.log(result[0]);
           platformSettings = result[0];
 
-          if(platformSettings.slackapi && platformSettings.slackapi.oauth_clientId && platformSettings.slackapi.oauth_clientSecret) {
+          if(platformSettings && platformSettings.slackapi && platformSettings.slackapi.oauth_clientId && platformSettings.slackapi.oauth_clientSecret) {
             passport.use(
             new SlackStrategy({
               clientID: platformSettings.slackapi.oauth_clientId,

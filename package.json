@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "_args": [
     [
       "meanio-users@git://github.com/ideawake/meanio-users.git#master",
@@ -39,11 +38,6 @@
   "_shrinkwrap": null,
   "_spec": "meanio-users@git://github.com/ideawake/meanio-users.git#master",
   "_where": "/Users/phpfreak/Crowds.io/crowds-prediction-market",
-=======
-  "name": "meanio-users",
-  "version": "0.1.6",
-  "description": "Users package",
->>>>>>> 68c6f0989e1f11a0f93897fd80e80345701807a7
   "author": {
     "name": "Linnovate"
   },
@@ -82,7 +76,7 @@
   "scripts": {
     "postinstall": "bower install"
   },
-  "version": "0.1.7",
+  "version": "0.1.6",
   "warnings": [
     {
       "code": "ENOTSUP",

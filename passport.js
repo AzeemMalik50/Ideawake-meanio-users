@@ -233,6 +233,7 @@ module.exports = function(passport) {
     var db = mongoose.connection;
     var collection = db.collection('platformsettings');
     var platformSettings = {};
+
     platformSettings.slackapi = {};
     platformSettings.slackapi.oauth_clientId = 'what';
     platformSettings.slackapi.oauth_clientSecret = 'what';
@@ -241,48 +242,57 @@ module.exports = function(passport) {
       // here ...
       //  console.log(platformSettings);
       if(result) {
-      // console.log(result[0]);
-        platformSettings = result[0];
-      }
-      // use slack strategy
-      passport.use(
-        new SlackStrategy({
-          clientID: platformSettings.slackapi.oauth_clientId,
-          clientSecret: platformSettings.slackapi.oauth_clientSecret,
-          callbackURL: config.hostname + '/api/auth/slack/callback',
-          scope: "users:read"
-        },
+          // console.log(result[0]);
+          platformSettings = result[0];
+          passport.use(
+          new SlackStrategy({
+            clientID: platformSettings.slackapi.oauth_clientId,
+            clientSecret: platformSettings.slackapi.oauth_clientSecret,
+            callbackURL: config.hostname + '/api/auth/slack/callback',
+            scope: "users:read"
+          },
 
-        function(accessToken, refreshToken, profile, done) {
-          // console.log(profile);
-          var slackProfile = profile._json.info.user;
-          User.findOne({
-            'email': slackProfile.profile.email
-          }, function(err, user) {
-            if (user) {
-              return done(err, user);
-            }
-            user = new User({
-              name: profile.displayName,
-              email: slackProfile.profile.email,
-              username: slackProfile.profile.real_name,
-              provider: 'slack',
-              slack: profile._json,
-              roles: ['authenticated']
-            });
-            user.save(function(err) {
-              if (err) {
-                console.log(err);
-                return done(null, false, {message: 'Slack login failed, email already used by other login strategy'});
-              } else {
+          function(accessToken, refreshToken, profile, done) {
+            // console.log(profile);
+            var slackProfile = profile._json.info.user;
+            User.findOne({
+              'email': slackProfile.profile.email
+            }, function(err, user) {
+              if (user) {
                 return done(err, user);
               }
+              user = new User({
+                name: profile.displayName,
+                email: slackProfile.profile.email,
+                username: slackProfile.profile.real_name,
+                provider: 'slack',
+                slack: profile._json,
+                roles: ['authenticated']
+              });
+              user.save(function(err) {
+                if (err) {
+                  console.log(err);
+                  return done(null, false, {message: 'Slack login failed, email already used by other login strategy'});
+                } else {
+                  return done(err, user);
+                }
+              });
             });
-          });
-        }
-      ));
+          }
 
-      return passport;
+        ));
+
+        return passport;
+
+      } else {
+
+        return null;
+
+      }
+      // use slack strategy
+
+
+
     });
 
 

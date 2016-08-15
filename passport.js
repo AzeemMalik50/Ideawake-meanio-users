@@ -9,7 +9,7 @@ var mongoose = require('mongoose'),
   LinkedinStrategy = require('passport-linkedin').Strategy,
   SlackStrategy = require('passport-slack').Strategy,
   User = mongoose.model('User'),
-  config = require('meanio').loadConfig();
+  config = require('meanio').getConfig();
   // PlatformSetting = mongoose.model('PlatformSetting');
 
   //platformSettings = require('meanio').getPlatformSettings();

@@ -1,6 +1,6 @@
 'use strict';
 
-var config = require('meanio').loadConfig();
+var config = require('meanio').getConfig();
 var jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
 var hasAuthorization = function(req, res, next) {

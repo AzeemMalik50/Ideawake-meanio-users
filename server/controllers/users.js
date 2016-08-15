@@ -6,7 +6,7 @@
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
   async = require('async'),
-  config = require('meanio').loadConfig(),
+  config = require('meanio').getConfig(),
   crypto = require('crypto'),
   nodemailer = require('nodemailer'),
   mandrillTransport = require('nodemailer-mandrill-transport'),

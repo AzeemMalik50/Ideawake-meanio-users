@@ -1,43 +1,4 @@
 {
-  "_args": [
-    [
-      "meanio-users@git://github.com/ideawake/meanio-users.git#master",
-      "/Users/phpfreak/Crowds.io/crowds-prediction-market"
-    ]
-  ],
-  "_from": "git://github.com/ideawake/meanio-users.git#master",
-  "_id": "meanio-users@0.1.6",
-  "_inCache": true,
-  "_installable": true,
-  "_location": "/meanio-users",
-  "_phantomChildren": {},
-  "_requested": {
-    "hosted": {
-      "directUrl": "https://raw.githubusercontent.com/ideawake/meanio-users/master/package.json",
-      "gitUrl": "git://github.com/ideawake/meanio-users.git#master",
-      "httpsUrl": "git+https://github.com/ideawake/meanio-users.git#master",
-      "shortcut": "github:ideawake/meanio-users#master",
-      "ssh": "git@github.com:ideawake/meanio-users.git#master",
-      "sshUrl": "git+ssh://git@github.com/ideawake/meanio-users.git#master",
-      "type": "github"
-    },
-    "name": "meanio-users",
-    "raw": "meanio-users@git://github.com/ideawake/meanio-users.git#master",
-    "rawSpec": "git://github.com/ideawake/meanio-users.git#master",
-    "scope": null,
-    "spec": "git://github.com/ideawake/meanio-users.git#master",
-    "type": "hosted"
-  },
-  "_requiredBy": [
-    "/",
-    "/meanio-admin",
-    "/meanio-circles"
-  ],
-  "_resolved": "git://github.com/ideawake/meanio-users.git#68c6f0989e1f11a0f93897fd80e80345701807a7",
-  "_shasum": "ab8e0cd82e385eddb279d86f9b0a0c65b85855d5",
-  "_shrinkwrap": null,
-  "_spec": "meanio-users@git://github.com/ideawake/meanio-users.git#master",
-  "_where": "/Users/phpfreak/Crowds.io/crowds-prediction-market",
   "author": {
     "name": "Linnovate"
   },
@@ -61,8 +22,6 @@
     "node": "4.2.x",
     "npm": "3.x"
   },
-  "gitHead": "68c6f0989e1f11a0f93897fd80e80345701807a7",
-  "homepage": "https://github.com/rjVapes/meanio-users#readme",
   "license": "MIT",
   "mean": "0.6.x",
   "name": "meanio-users",
@@ -71,7 +30,7 @@
   "readmeFilename": "README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rjVapes/meanio-users.git"
+    "url": "git+https://github.com/ideawake/meanio-users.git"
   },
   "scripts": {
     "postinstall": "bower install"

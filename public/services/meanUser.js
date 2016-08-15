@@ -113,11 +113,15 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
     };
 
     MeanUserKlass.prototype.onIdFail = function (response) {
+      // console.log(response);
       $location.path(response.redirect);
       this.loginError = 'Authentication failed.';
       this.registerError = response;
       this.validationError = response.msg;
-      this.resetpassworderror = response.msg;
+      if(Object.prototype.toString.call( response ) === '[object Array]') {
+        this.resetpassworderror = response[0].msg;
+        $rootScope.$emit('resetpasswordfailed');
+      }
       $rootScope.$emit('loginfailed');
       $rootScope.$emit('registerfailed');
     };
@@ -170,8 +174,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         })
           .success(function(response) {
             // this.onIdentity.bind(this);
-            // console.log(response);
-            $location.url($meanConfig.loginPage);
+            $location.url($meanConfig.loginPage)
           })
           .error(this.onIdFail.bind(this));
       };

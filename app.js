@@ -36,8 +36,8 @@ MeanUser.register(function(app, database, passport) {
 
     MeanUser.angularDependencies(['angular-jwt']);
 
-    MeanUser.events.defaultData({
-        type: 'user'
+    MeanUser.events.setDefaults({
+      type: 'user'
     });
 
     return MeanUser;

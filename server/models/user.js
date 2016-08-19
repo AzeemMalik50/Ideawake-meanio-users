@@ -92,8 +92,22 @@ var UserSchema = new Schema({
   twitter: {},
   github: {},
   google: {},
-  linkedin: {}
+  linkedin: {},
+  userProfile : {
+    type: Schema.ObjectId,
+    ref: 'UserProfile'
+  }
 });
+
+
+UserSchema.statics.load = function(id, cb) {
+  this.findOne({
+    _id: id
+  })
+  .populate('userProfile')
+  .exec(cb);
+};
+
 
 /**
  * Virtuals

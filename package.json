@@ -19,38 +19,12 @@
     "node": "4.2.x",
     "npm": "3.x"
   },
-  "gitHead": "68c6f0989e1f11a0f93897fd80e80345701807a7",
-  "homepage": "https://github.com/rjVapes/meanio-users#readme",
   "license": "MIT",
-  "mean": "0.6.x",
-  "name": "meanio-users",
-  "optionalDependencies": {},
-  "readme": "README: meanUser\n",
-  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rjVapes/meanio-users.git"
+    "url": "git+https://github.com/ideawake/meanio-users.git"
   },
   "scripts": {
     "postinstall": "bower install"
-  },
-  "version": "0.1.6",
-  "warnings": [
-    {
-      "code": "ENOTSUP",
-      "pkgid": "meanio-users@0.1.6",
-      "required": {
-        "node": "4.2.x",
-        "npm": "3.x"
-      }
-    },
-    {
-      "code": "ENOTSUP",
-      "pkgid": "meanio-users@0.1.6",
-      "required": {
-        "node": "4.2.x",
-        "npm": "3.x"
-      }
-    }
-  ]
+  }
 }

@@ -224,6 +224,7 @@ module.exports = function(MeanUser) {
         loggedin: function (req, res) {
             if (!req.isAuthenticated()) return res.send('0');
             User.findById(req.user._id)
+                .populate('userProfile')
                 .exec(function (err, user) {
                     if (err) return next(err);
                     res.send(user ? user : '0');
@@ -252,7 +253,9 @@ module.exports = function(MeanUser) {
         user: function(req, res, next, id) {
             User.findOne({
                 _id: id
-            }).exec(function(err, user) {
+            })
+            .populate('userProfile')
+            .exec(function(err, user) {
                 if (err) return next(err);
                 if (!user) return next(new Error('Failed to load User ' + id));
                 req.profile = user;
@@ -265,8 +268,10 @@ module.exports = function(MeanUser) {
             searchObj.roles = {$in :[req.query.hasRole]};
           }
           console.log('user.searchObj', searchObj, req.query);
-          User.find(searchObj).sort('username').exec(function(err, users){
-            res.send(users);
+          User.find(searchObj).sort('username')
+            .populate('userProfile')
+            .exec(function(err, users){
+                res.send(users);
           });
         },
         /**
@@ -281,7 +286,8 @@ module.exports = function(MeanUser) {
 
             User.findOne({
                 _id: req.user._id
-            }, function(err, user) {
+            })
+            .populate('userProfile').exec(function(err, user) {
                 if (err || !user) {
                     delete req.user;
                 } else {
@@ -311,7 +317,7 @@ module.exports = function(MeanUser) {
                 resetPasswordExpires: {
                     $gt: Date.now()
                 }
-            }, function(err, user) {
+            }).populate('userProfile').exec(function(err, user) {
                 if (err) {
                     return res.status(400).json({
                         msg: err

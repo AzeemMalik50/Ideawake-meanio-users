@@ -115,7 +115,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
     MeanUserKlass.prototype.onIdFail = function (response) {
       // console.log(response);
       $location.path(response.redirect);
-      this.loginError = 'Authentication failed.';
+      this.loginError = 'Email or password incorrect, please try again.';
       this.registerError = response;
       this.validationError = response.msg;
       if(Object.prototype.toString.call( response ) === '[object Array]') {

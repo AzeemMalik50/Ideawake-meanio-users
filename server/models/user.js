@@ -16,20 +16,48 @@ var validatePresenceOf = function(value) {
   return (this.provider && this.provider !== 'local') || (value && value.length);
 };
 
-var validateUniqueEmail = function(value, callback) {
-  var User = mongoose.model('User');
-  User.find({
-    $and: [{
-      email: value
-    }, {
-      _id: {
-        $ne: this._id
-      }
-    }]
-  }, function(err, user) {
-    callback(err || user.length === 0);
-  });
-};
+/**
+ * Generates Mongoose uniqueness validator
+ * 
+ * @param string modelName
+ * @param string field
+ * @param boolean caseSensitive
+ * 
+ * @return function
+ **/
+function unique(modelName, field, caseSensitive) {
+  return function(value, respond) {
+    if(value && value.length) {
+      var query = mongoose.model(modelName).where(field, new RegExp('^'+value+'$', caseSensitive ? 'i' : undefined));
+      if(!this.isNew)
+        query = query.where('_id').ne(this._id);
+      query.count(function(err, n) {
+        respond(n<1);
+      });
+    }
+    else
+      respond(false);
+  };
+}
+
+// var validateUniqueEmail = function(value, callback) {
+//   var User = mongoose.model('User');
+//   User.find({
+//     $and: [{
+//       email: toLower(value)
+//     }, {
+//       _id: {
+//         $ne: this._id
+//       }
+//     }]
+//   }, function(err, user) {
+//     callback(err || user.length === 0);
+//   });
+// };
+
+function toLower (v) {
+  return v.toLowerCase();
+}
 
 /**
  * Getter
@@ -52,9 +80,12 @@ var UserSchema = new Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
+    set: toLower,
+    get: toLower,
     // Regexp to validate emails with more strict rules as added in tests/users.js which also conforms mostly with RFC2822 guide lines
     match: [/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/, 'Please enter a valid email'],
-    validate: [validateUniqueEmail, 'E-mail address is already in-use']
+    validate: [unique('User', 'email'), 'E-mail address is already in-use']
   },
   username: {
     type: String,

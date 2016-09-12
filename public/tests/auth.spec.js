@@ -144,11 +144,11 @@
 
 
       it('should fail to register with duplicate Username', function() {
-        $httpBackend.when('POST', '/api/register').respond(400, 'Username already taken');
+        $httpBackend.when('POST', '/api/register').respond(400, 'Email or username already taken');
         scope.register();
         $httpBackend.flush();
         // test scope value
-        expect(scope.usernameError).toBe('Username already taken');
+        expect(scope.usernameError).toBe('Email or username already taken');
         expect(scope.registerError).toBe(null);
       });
 

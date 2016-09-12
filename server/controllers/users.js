@@ -95,7 +95,7 @@ module.exports = function(MeanUser) {
                 case 11000:
                 case 11001:
                   res.status(400).json([{
-                    msg: 'Username already taken',
+                    msg: 'Email or username already taken',
                     param: 'username'
                   }]);
                   break;
@@ -172,7 +172,7 @@ module.exports = function(MeanUser) {
                         case 11000:
                         case 11001:
                         res.status(400).json([{
-                            msg: 'Username already taken',
+                            msg: 'Email or username already taken',
                             param: 'username'
                         }]);
                         break;

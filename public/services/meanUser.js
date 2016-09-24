@@ -76,8 +76,6 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
 
       destination = angular.isDefined(response.redirect) ? response.redirect : destination;
 
-      //console.log("DESTINATiON IS: " + destination);
-
       this.user = user || response;
       this.loggedin = true;
       this.loginError = 0;
@@ -94,21 +92,15 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Add circles info to user
       $http.get('/api/circles/mine').success(function(acl) {
         self.acl = acl;
-
-         if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
-
+        $rootScope.$emit('loggedin', userObj);
+        Global.authenticate(userObj);
+        if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
           var redirect = $cookies.get('redirect');
-
           $cookies.remove('redirect');
           $location.path(redirect);
-
         } else if (destination) {
           $location.path(destination);
         }
-
-        $rootScope.$emit('loggedin', userObj);
-        Global.authenticate(userObj);
-
       });
     };
 

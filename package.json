@@ -23,8 +23,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ideawake/meanio-users.git"
-  },
-  "scripts": {
-    "postinstall": "bower install"
   }
 }

@@ -66,6 +66,7 @@ var escapeProperty = function(value) {
   return _.escape(value);
 };
 
+var schemaOptions = { timestamps: true };
 /**
  * User Schema
  */
@@ -128,7 +129,7 @@ var UserSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'UserProfile'
   }
-});
+}, schemaOptions);
 
 
 UserSchema.statics.load = function(id, cb) {

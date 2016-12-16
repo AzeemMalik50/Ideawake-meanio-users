@@ -5,6 +5,7 @@
  */
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
+  UserProfile = mongoose.model('UserProfile'),
   async = require('async'),
   config = require('meanio').getConfig(),
   crypto = require('crypto'),
@@ -13,8 +14,6 @@ var mongoose = require('mongoose'),
   templates = require('../template'),
   _ = require('lodash'),
   jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
-
-
 
 /**
  * Send reset password email
@@ -27,6 +26,36 @@ function sendMail(mailOptions) {
     });
 }
 
+function createUserProfile(user, callback) {
+    UserProfile.find({'user' : user._id}).exec(function(err, results){
+        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+        if(results && results.length > 0) {
+            callback(results[0]);
+        } else {
+            var newUserProfile = new UserProfile();
+            newUserProfile.user = user._id;
+            user.name = (!user.name) ? 'Unknown User' : user.name;
+            newUserProfile.displayName = user.name;
+            newUserProfile.description = user.name;
+            newUserProfile.profileImage = {};
+            newUserProfile.save(function(err) {
+                if (err) {
+                    console.log(err);
+                    callback(null);
+                } else {
+                    console.log('Created new user profile');
+                    user.userProfile =  newUserProfile._id;
+                    user.save(function(error) {
+                        if(error) {
+                            console.log('Error saving userProfile to User object');
+                        }
+                    });
+                    callback(newUserProfile);
+                }
+            });
+        }
+     });
+};
 
 
 module.exports = function(MeanUser) {
@@ -180,7 +209,6 @@ module.exports = function(MeanUser) {
                         var modelErrors = [];
 
                         if (err.errors) {
-
                             for (var x in err.errors) {
                                 modelErrors.push({
                                     param: x,
@@ -195,30 +223,61 @@ module.exports = function(MeanUser) {
                     return res.status(400);
                 }
 
-                var payload = user;
-                payload.redirect = req.body.redirect;
-                var escaped = JSON.stringify(payload);
-                escaped = encodeURI(escaped);
-                req.logIn(user, function(err) {
-                    if (err) { return next(err); }
+                if(user.userProfile === null) {
+                    createUserProfile(user, function(ret) {
+                        var payload = user;
+                        user.userProfile = ret;
+                        payload.redirect = req.body.redirect;
+                        var escaped = JSON.stringify(payload);
+                        escaped = encodeURI(escaped);
+                        req.logIn(user, function(err) {
+                            if (err) { return next(err); }
 
-                    MeanUser.events.publish({
-                        action: 'created',
-                        user: {
-                            name: req.user.name,
-                            username: user.username,
-                            email: user.email
-                        }
-                    });
+                            MeanUser.events.publish({
+                                action: 'created',
+                                user: {
+                                    name: req.user.name,
+                                    username: user.username,
+                                    email: user.email
+                                }
+                            });
 
-                    // We are sending the payload inside the token
-                    var token = jwt.sign(escaped, config.secret);
-                    res.json({
-                      token: token,
-                      redirect: config.strategies.landingPage
+                            // We are sending the payload inside the token
+                            var token = jwt.sign(escaped, config.secret);
+                            res.json({
+                              token: token,
+                              redirect: config.strategies.landingPage
+                            });
+                        });
                     });
-                });
-                res.status(200);
+                } else {
+                    var payload = user;
+                    payload.redirect = req.body.redirect;
+                    var escaped = JSON.stringify(payload);
+                    escaped = encodeURI(escaped);
+                    req.logIn(user, function(err) {
+                        if (err) { return next(err); }
+
+                        MeanUser.events.publish({
+                            action: 'created',
+                            user: {
+                                name: req.user.name,
+                                username: user.username,
+                                email: user.email
+                            }
+                        });
+
+                        // We are sending the payload inside the token
+                        var token = jwt.sign(escaped, config.secret);
+                        res.json({
+                          token: token,
+                          redirect: config.strategies.landingPage
+                        });
+                    });
+                    res.status(200);
+                }
+
+
             });
         },
         loggedin: function (req, res) {
@@ -227,8 +286,15 @@ module.exports = function(MeanUser) {
                 .populate('userProfile')
                 .exec(function (err, user) {
                     if (err) return next(err);
-                    res.send(user ? user : '0');
-                })
+                    if(user.userProfile === null) {
+                        createUserProfile(user, function(profile) {
+                            user.userProfile = profile;
+                            res.send(user ? user : '0');
+                        });
+                    } else {
+                        res.send(user ? user : '0');
+                    }
+                });
         },
         /**
          * Send User
@@ -236,15 +302,32 @@ module.exports = function(MeanUser) {
         me: function(req, res) {
             if (!req.user) return res.send(null);
 
-            if(!req.refreshJWT) {
-                return res.json(req.user);
+            if(req.user.userProfile === null) {
+                createUserProfile(req.user, function(profile) {
+                    if(!req.refreshJWT) {
+                        req.user.userProfile = profile;
+                        return res.json(req.user);
+                    } else {
+                        req.user.userProfile = profile;
+                        var payload = req.user;
+                        var escaped = JSON.stringify(payload);
+                        escaped = encodeURI(escaped);
+                        var token = jwt.sign(escaped, config.secret);
+                        res.json({ token: token });
+                    }
+                });
             } else {
-                var payload = req.user;
-                var escaped = JSON.stringify(payload);
-                escaped = encodeURI(escaped);
-                var token = jwt.sign(escaped, config.secret);
-                res.json({ token: token });
+                if(!req.refreshJWT) {
+                    return res.json(req.user);
+                } else {
+                    var payload = req.user;
+                    var escaped = JSON.stringify(payload);
+                    escaped = encodeURI(escaped);
+                    var token = jwt.sign(escaped, config.secret);
+                    res.json({ token: token });
+                }
             }
+
         },
 
         /**
@@ -290,6 +373,7 @@ module.exports = function(MeanUser) {
             .populate('userProfile').exec(function(err, user) {
                 if (err || !user) {
                     delete req.user;
+                    return next();
                 } else {
                     var dbUser = user.toJSON();
                     var id = req.user._id;
@@ -301,9 +385,10 @@ module.exports = function(MeanUser) {
                     if (!eq) {
                         req.refreshJWT = true;
                     }
+
                     req.user = user;
+                    next();
                 }
-                return next();
             });
         },
 

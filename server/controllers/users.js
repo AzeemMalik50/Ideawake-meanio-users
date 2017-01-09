@@ -95,7 +95,7 @@ module.exports = function(MeanUser) {
          */
         signout: function(req, res) {
 
-            MeanUser.events.publish({
+            MeanUser.events.emit('logged_out', {
                 action: 'logged_out',
                 user: req.user
             });
@@ -152,7 +152,7 @@ module.exports = function(MeanUser) {
             // req.logIn(user, function(err) {
             //   if (err) { return next(err); }
             //
-            //   MeanUser.events.publish({
+            //   MeanUser.events.emit('created', {
             //     action: 'created',
             //     user: {
             //       name: req.user.name,
@@ -231,7 +231,7 @@ module.exports = function(MeanUser) {
                         req.logIn(user, function(err) {
                             if (err) { return next(err); }
 
-                            MeanUser.events.publish({
+                            MeanUser.events.emit('created', {
                                 action: 'created',
                                 user: {
                                     name: req.user.name,
@@ -256,7 +256,7 @@ module.exports = function(MeanUser) {
                     req.logIn(user, function(err) {
                         if (err) { return next(err); }
 
-                        MeanUser.events.publish({
+                        MeanUser.events.emit('created', {
                             action: 'created',
                             user: {
                                 name: req.user.name,
@@ -422,7 +422,7 @@ module.exports = function(MeanUser) {
                 user.resetPasswordExpires = undefined;
                 user.save(function(err) {
 
-                    MeanUser.events.publish({
+                    MeanUser.events.emit('reset_password', {
                         action: 'reset_password',
                         user: {
                             name: user.name
@@ -491,7 +491,7 @@ module.exports = function(MeanUser) {
                     response.status = 'danger';
 
                 }
-                MeanUser.events.publish({
+                MeanUser.events.emit('forgot_password', {
                     action: 'forgot_password',
                     user: {
                         name: req.body.text

@@ -97,9 +97,7 @@ module.exports = function(MeanUser) {
 
             MeanUser.events.publish({
                 action: 'logged_out',
-                user: {
-                    name: req.user.name
-                }
+                user: req.user
             });
 
             req.logout();

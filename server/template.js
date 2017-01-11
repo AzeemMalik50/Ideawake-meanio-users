@@ -10,7 +10,7 @@ module.exports = {
       'This link will work for 1 hour or until your password is reset.',
       'If you did not ask to change your password, please ignore this email and your account will remain unchanged.'
     ].join('\n\n');
-    mailOptions.subject = 'Resetting the password';
+    mailOptions.subject = 'Ideawake - changing your password';
     return mailOptions;
   }
 };

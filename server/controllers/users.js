@@ -421,6 +421,10 @@ module.exports = function(MeanUser) {
                 user.resetPasswordToken = undefined;
                 user.resetPasswordExpires = undefined;
                 user.save(function(err) {
+                    var escaped = JSON.stringify(user);
+                        escaped = encodeURI(escaped);
+                    var token = jwt.sign(escaped, config.secret);
+                    var destination = req.redirect || config.strategies.landingPage;
 
                     MeanUser.events.emit('reset_password', {
                         action: 'reset_password',
@@ -431,8 +435,11 @@ module.exports = function(MeanUser) {
 
                     req.logIn(user, function(err) {
                         if (err) return next(err);
+                        res.cookie('redirect', destination);
                         return res.send({
-                            user: user
+                            user: user,
+                            token: token,
+                            redirect: destination
                         });
                     });
                 });

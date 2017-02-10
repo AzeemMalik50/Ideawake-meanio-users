@@ -1,7 +1,7 @@
 {
   "name": "meanio-users",
   "mean": "0.6.x",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "dependencies": {
     "angular-jwt": "^0.1.5",
     "meanio-circles": "^0.1.x",
@@ -15,10 +15,6 @@
   },
   "description": "Users package",
   "devDependencies": {},
-  "engines": {
-    "node": "4.2.x",
-    "npm": "3.x"
-  },
   "license": "MIT",
   "repository": {
     "type": "git",

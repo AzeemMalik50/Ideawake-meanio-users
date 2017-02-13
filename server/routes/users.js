@@ -51,51 +51,37 @@ module.exports = function(MeanUser, app, circles, database, passport) {
         .post(passport.authenticate('local', {
           failureFlash: false
         }), function(req, res) {
-
           var payload = req.user;
           var escaped;
           var token;
-
           MeanUser.events.publish({
             action: 'logged_in',
             user: {
                 name: req.user.name
             }
           });
-
           if (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) {
               // res.redirect(req.query.redirect);
               var redirect =  req.body.redirect;
-
               payload.redirect = redirect;
-
               escaped = JSON.stringify(payload);
-
               escaped = encodeURI(escaped);
-
               token = jwt.sign(escaped, config.secret);
-
               res.json({
                   token: token,
                   user: req.user,
                   redirect: redirect
               });
-
           } else {
-
               escaped = JSON.stringify(payload);
-
               escaped = encodeURI(escaped);
-
               token = jwt.sign(escaped, config.secret);
-
               res.json({
                   token: token,
                   user: req.user,
                   redirect: config.strategies.landingPage
               });
           }
-
         });
   }
 

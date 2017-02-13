@@ -69,11 +69,8 @@ module.exports = function(MeanUser) {
             escaped = encodeURI(escaped);
             // We are sending the payload inside the token
             var token = jwt.sign(escaped, config.secret);
-
             res.cookie('token', token);
-
             var destination = req.redirect || config.strategies.landingPage;
-
             if(!req.cookies.redirect) {
                 res.cookie('redirect', destination);
                 res.redirect(destination);
@@ -192,9 +189,9 @@ module.exports = function(MeanUser) {
                         return res.status(400);
                     }
 
-
                     var user = new User(req.body);
                     user.provider = 'local';
+                    user.email = user.email.toLowerCase();
 
                     // because we set our user.provider to local our models/user.js validation will always be true
                     req.assert('name', 'You must enter a name').notEmpty();

@@ -100,6 +100,7 @@ var UserSchema = new Schema({
   },
   hashed_password: {
     type: String,
+    select: false,
     validate: [validatePresenceOf, 'Password cannot be blank']
   },
   provider: {
@@ -116,9 +117,18 @@ var UserSchema = new Schema({
       default: true
     }
   },
-  salt: String,
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
+  salt: {
+    type: String,
+    select: false
+  }
+  resetPasswordToken: {
+    type: String,
+    select: false
+  },
+  resetPasswordExpires: {
+    type: Date,
+    select: false
+  },
   profile: {},
   facebook: {},
   twitter: {},

@@ -120,7 +120,7 @@ var UserSchema = new Schema({
   salt: {
     type: String,
     select: false
-  }
+  },
   resetPasswordToken: {
     type: String,
     select: false

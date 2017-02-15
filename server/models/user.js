@@ -128,6 +128,10 @@ var UserSchema = new Schema({
   userProfile : {
     type: Schema.ObjectId,
     ref: 'UserProfile'
+  },
+  deleted: {
+    type: Boolean,
+    default: false
   }
 }, schemaOptions);
 

@@ -69,8 +69,11 @@ module.exports = function(MeanUser) {
             escaped = encodeURI(escaped);
             // We are sending the payload inside the token
             var token = jwt.sign(escaped, config.secret);
+
             res.cookie('token', token);
+
             var destination = req.redirect || config.strategies.landingPage;
+
             if(!req.cookies.redirect) {
                 res.cookie('redirect', destination);
                 res.redirect(destination);
@@ -189,9 +192,9 @@ module.exports = function(MeanUser) {
                         return res.status(400);
                     }
 
+
                     var user = new User(req.body);
                     user.provider = 'local';
-                    user.email = user.email.toLowerCase();
 
                     // because we set our user.provider to local our models/user.js validation will always be true
                     req.assert('name', 'You must enter a name').notEmpty();
@@ -234,7 +237,7 @@ module.exports = function(MeanUser) {
                             return res.status(400);
                         }
 
-                        if(user.userProfile === null) {
+                        // if(user.userProfile === null) {
                             createUserProfile(user, function(ret) {
                                 var payload = user;
                                 user.userProfile = ret;
@@ -261,32 +264,32 @@ module.exports = function(MeanUser) {
                                     });
                                 });
                             });
-                        } else {
-                            var payload = user;
-                            payload.redirect = req.body.redirect;
-                            var escaped = JSON.stringify(payload);
-                            escaped = encodeURI(escaped);
-                            req.logIn(user, function(err) {
-                                if (err) { return next(err); }
+                        // } else {
+                        //     var payload = user;
+                        //     payload.redirect = req.body.redirect;
+                        //     var escaped = JSON.stringify(payload);
+                        //     escaped = encodeURI(escaped);
+                        //     req.logIn(user, function(err) {
+                        //         if (err) { return next(err); }
 
-                                MeanUser.events.emit('created', {
-                                    action: 'created',
-                                    user: {
-                                        name: req.user.name,
-                                        username: user.username,
-                                        email: user.email
-                                    }
-                                });
+                        //         MeanUser.events.emit('created', {
+                        //             action: 'created',
+                        //             user: {
+                        //                 name: req.user.name,
+                        //                 username: user.username,
+                        //                 email: user.email
+                        //             }
+                        //         });
 
-                                // We are sending the payload inside the token
-                                var token = jwt.sign(escaped, config.secret);
-                                res.json({
-                                  token: token,
-                                  redirect: config.strategies.landingPage
-                                });
-                            });
-                            res.status(200);
-                        }
+                        //         // We are sending the payload inside the token
+                        //         var token = jwt.sign(escaped, config.secret);
+                        //         res.json({
+                        //           token: token,
+                        //           redirect: config.strategies.landingPage
+                        //         });
+                        //     });
+                        //     res.status(200);
+                        // }
                     });
                 }
             });
@@ -313,7 +316,7 @@ module.exports = function(MeanUser) {
         me: function(req, res) {
             if (!req.user) return res.send(null);
 
-            if(req.user.userProfile === null) {
+            //if(req.user.userProfile === null) {
                 createUserProfile(req.user, function(profile) {
                     if(!req.refreshJWT) {
                         req.user.userProfile = profile;
@@ -327,17 +330,17 @@ module.exports = function(MeanUser) {
                         res.json({ token: token });
                     }
                 });
-            } else {
-                if(!req.refreshJWT) {
-                    return res.json(req.user);
-                } else {
-                    var payload = req.user;
-                    var escaped = JSON.stringify(payload);
-                    escaped = encodeURI(escaped);
-                    var token = jwt.sign(escaped, config.secret);
-                    res.json({ token: token });
-                }
-            }
+            // } else {
+            //     if(!req.refreshJWT) {
+            //         return res.json(req.user);
+            //     } else {
+            //         var payload = req.user;
+            //         var escaped = JSON.stringify(payload);
+            //         escaped = encodeURI(escaped);
+            //         var token = jwt.sign(escaped, config.secret);
+            //         res.json({ token: token });
+            //     }
+            // }
 
         },
 

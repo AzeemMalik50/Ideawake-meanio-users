@@ -28,10 +28,10 @@ function sendMail(mailOptions) {
 
 function createUserProfile(user, callback) {
     UserProfile.find({'user' : user._id}).exec(function(err, results){
-        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         if(results && results.length > 0) {
             callback(results[0]);
         } else {
+            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
             var newUserProfile = new UserProfile();
             newUserProfile.user = user._id;
             user.name = (!user.name) ? 'Unknown User' : user.name;

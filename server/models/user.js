@@ -18,11 +18,11 @@ var validatePresenceOf = function(value) {
 
 /**
  * Generates Mongoose uniqueness validator
- * 
+ *
  * @param string modelName
  * @param string field
  * @param boolean caseSensitive
- * 
+ *
  * @return function
  **/
 function unique(modelName, field, caseSensitive) {
@@ -55,8 +55,16 @@ function unique(modelName, field, caseSensitive) {
 //   });
 // };
 
+// function toLower (v) {
+//   return v.toLowerCase();
+// }
+
 function toLower (v) {
-  return v.toLowerCase();
+  if(typeof v !== 'undefined') {
+    return v.toLowerCase();
+  } else {
+    return '';
+  }
 }
 
 /**
@@ -128,10 +136,6 @@ var UserSchema = new Schema({
   userProfile : {
     type: Schema.ObjectId,
     ref: 'UserProfile'
-  },
-  deleted: {
-    type: Boolean,
-    default: false
   }
 }, schemaOptions);
 

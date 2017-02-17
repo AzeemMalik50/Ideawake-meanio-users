@@ -52,6 +52,7 @@ module.exports = function(MeanUser, app, circles, database, passport) {
           failureFlash: false
         }), function(req, res) {
           var payload = req.user;
+          payload.xsrfToken = req.csrfToken();
           var escaped;
           var token;
           MeanUser.events.publish({

@@ -57,6 +57,15 @@ function createUserProfile(user, callback) {
      });
 };
 
+function getTokenFromReq(req) {
+    var payload = req.user;
+    payload.xsrfToken = req.csrfToken();
+    var escaped = JSON.stringify(payload);
+    escaped = encodeURI(escaped);
+    // We are sending the payload inside the token
+    var token = jwt.sign(escaped, config.secret);
+    return token;
+}
 
 module.exports = function(MeanUser) {
     return {
@@ -64,16 +73,11 @@ module.exports = function(MeanUser) {
          * Auth callback
          */
         authCallback: function(req, res) {
-            var payload = req.user;
-            var escaped = JSON.stringify(payload);
-            escaped = encodeURI(escaped);
-            // We are sending the payload inside the token
-            var token = jwt.sign(escaped, config.secret);
-
-            res.cookie('token', token);
-
+            var token = getTokenFromReq(req);
+            // res.cookie('id_token', token, {httpOnly: true, secure: true});
+            // var csrfToken = req.csrfToken();
+            // res.cookie('XSRF-TOKEN', csrfToken, {httpOnly: true, secure: true});
             var destination = req.redirect || config.strategies.landingPage;
-
             if(!req.cookies.redirect) {
                 res.cookie('redirect', destination);
                 res.redirect(destination);
@@ -242,6 +246,7 @@ module.exports = function(MeanUser) {
                                 var payload = user;
                                 user.userProfile = ret;
                                 payload.redirect = req.body.redirect;
+                                payload.xsrfToken = req.csrfToken();
                                 var escaped = JSON.stringify(payload);
                                 escaped = encodeURI(escaped);
                                 req.logIn(user, function(err) {

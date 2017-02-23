@@ -16,7 +16,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
 		}
 
     jwtInterceptorProvider.tokenGetter = function() {
-      if (lsTest()) {
+      if (localStorageTest()) {
       	return localStorage.getItem('JWT');
       } else { return '' }
     };

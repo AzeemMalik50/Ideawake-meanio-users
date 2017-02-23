@@ -15,11 +15,15 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
 	    }
 		}
 
-    jwtInterceptorProvider.tokenGetter = function() {
+    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', function($cookies, $location) {
       if (localStorageTest()) {
       	return localStorage.getItem('JWT');
-      } else { return '' }
-    };
+      } else {
+        $cookies.put('nolocalstorage', 'true');
+        $location.url('/unsupported-browser');
+      	// return $cookies.get('id_token');
+      }
+    }];
 
     $httpProvider.interceptors.push('jwtInterceptor');
   }

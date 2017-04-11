@@ -140,6 +140,14 @@ var UserSchema = new Schema({
   deleted: {
     type: Boolean,
     default: false
+  },
+  lastSeen: {
+    type: Date,
+    default: Date.now
+  },
+  lastLogin: {
+    type: Date,
+    default: Date.now
   }
 }, schemaOptions);
 

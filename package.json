@@ -1,63 +1,7 @@
 {
-  "_args": [
-    [
-      {
-        "raw": "meanio-users@git://github.com/ideawake/meanio-users.git#master",
-        "scope": null,
-        "escapedName": "meanio-users",
-        "name": "meanio-users",
-        "rawSpec": "git://github.com/ideawake/meanio-users.git#master",
-        "spec": "git://github.com/ideawake/meanio-users.git#master",
-        "type": "hosted",
-        "hosted": {
-          "type": "github",
-          "ssh": "git@github.com:ideawake/meanio-users.git#master",
-          "sshUrl": "git+ssh://git@github.com/ideawake/meanio-users.git#master",
-          "httpsUrl": "git+https://github.com/ideawake/meanio-users.git#master",
-          "gitUrl": "git://github.com/ideawake/meanio-users.git#master",
-          "shortcut": "github:ideawake/meanio-users#master",
-          "directUrl": "https://raw.githubusercontent.com/ideawake/meanio-users/master/package.json"
-        }
-      },
-      "/Users/phpfreak/Crowds.io/ideawake"
-    ]
-  ],
-  "_from": "git://github.com/ideawake/meanio-users.git#master",
-  "_id": "meanio-users@0.1.6",
-  "_inCache": true,
-  "_location": "/meanio-users",
-  "_phantomChildren": {},
-  "_requested": {
-    "raw": "meanio-users@git://github.com/ideawake/meanio-users.git#master",
-    "scope": null,
-    "escapedName": "meanio-users",
-    "name": "meanio-users",
-    "rawSpec": "git://github.com/ideawake/meanio-users.git#master",
-    "spec": "git://github.com/ideawake/meanio-users.git#master",
-    "type": "hosted",
-    "hosted": {
-      "type": "github",
-      "ssh": "git@github.com:ideawake/meanio-users.git#master",
-      "sshUrl": "git+ssh://git@github.com/ideawake/meanio-users.git#master",
-      "httpsUrl": "git+https://github.com/ideawake/meanio-users.git#master",
-      "gitUrl": "git://github.com/ideawake/meanio-users.git#master",
-      "shortcut": "github:ideawake/meanio-users#master",
-      "directUrl": "https://raw.githubusercontent.com/ideawake/meanio-users/master/package.json"
-    }
-  },
-  "_requiredBy": [
-    "/",
-    "/meanio-admin",
-    "/meanio-circles"
-  ],
-  "_resolved": "git://github.com/ideawake/meanio-users.git#9bfe01d6c7b5be4d22ac001b1cb8428bb8d0b5b1",
-  "_shasum": "a2803802735ef114fb5b3edfffadf3825ae7b1c2",
-  "_shrinkwrap": null,
-  "_spec": "meanio-users@git://github.com/ideawake/meanio-users.git#master",
-  "_where": "/Users/phpfreak/Crowds.io/ideawake",
-  "bugs": {
-    "url": "https://github.com/ideawake/meanio-users/issues"
-  },
+  "name": "meanio-users",
+  "mean": "0.6.x",
+  "version": "0.1.6",
   "dependencies": {
     "angular-jwt": "^0.1.5",
     "meanio-circles": "^0.1.x",
@@ -71,17 +15,9 @@
   },
   "description": "Users package",
   "devDependencies": {},
-  "gitHead": "9bfe01d6c7b5be4d22ac001b1cb8428bb8d0b5b1",
-  "homepage": "https://github.com/ideawake/meanio-users#readme",
   "license": "MIT",
-  "mean": "0.6.x",
-  "name": "meanio-users",
-  "optionalDependencies": {},
-  "readme": "README: meanUser\n",
-  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ideawake/meanio-users.git"
-  },
-  "version": "0.1.6"
+  }
 }

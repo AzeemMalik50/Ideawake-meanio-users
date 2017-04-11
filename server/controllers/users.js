@@ -55,7 +55,34 @@ function createUserProfile(user, callback) {
             });
         }
      });
-};
+}
+
+function updateLastSeenTime(user, callback) {
+    var update = false;
+    var now = new Date().getTime();;
+
+    if(typeof user.lastSeen === undefined) {
+        user.lastSeen = now;
+        update = true;
+    } else {
+        // console.log('Old User Last Seen: ', user.lastSeen);
+        console.log('New Date', now);
+        console.log('Old Date', user.lastSeen.getTime())
+        if((now) - user.lastSeen.getTime() > config.userLastSeenTimeout){
+            user.lastSeen = now;
+            update = true;
+        }
+    }
+
+    if(update) {
+        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Updating ' + (user.name || user.username) + ' Last Seen to: ', user.lastSeen);
+        user.save(function(err) {
+            callback(user);
+        });
+    } else {
+        callback(user);
+    }
+}
 
 
 module.exports = function(MeanUser) {
@@ -315,8 +342,7 @@ module.exports = function(MeanUser) {
          */
         me: function(req, res) {
             if (!req.user) return res.send(null);
-
-            //if(req.user.userProfile === null) {
+           // updateLastSeenTime(req.user, function(updatedUser) { // moved to platformsettings
                 createUserProfile(req.user, function(profile) {
                     if(!req.refreshJWT) {
                         req.user.userProfile = profile;
@@ -330,18 +356,7 @@ module.exports = function(MeanUser) {
                         res.json({ token: token });
                     }
                 });
-            // } else {
-            //     if(!req.refreshJWT) {
-            //         return res.json(req.user);
-            //     } else {
-            //         var payload = req.user;
-            //         var escaped = JSON.stringify(payload);
-            //         escaped = encodeURI(escaped);
-            //         var token = jwt.sign(escaped, config.secret);
-            //         res.json({ token: token });
-            //     }
-            // }
-
+           // });
         },
 
         /**

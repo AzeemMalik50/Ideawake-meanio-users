@@ -10,8 +10,9 @@ var mongoose = require('mongoose'),
     _ = require('lodash');
     // async = require('async');
 
-module.exports = function(UserProfiles) {
-    var socket = UserProfiles.io;
+module.exports = function(UserProfiles, http) {
+    var io = require('../../../../packages/custom/socketshelper/server/config/sockets')(http); // this is hacky but works for now.
+    var socket = io;
 
     // Helper function, must go before return !
     var getUserProfile = function(req, callback) {

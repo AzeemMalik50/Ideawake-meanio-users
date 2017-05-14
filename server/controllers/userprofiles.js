@@ -7,13 +7,14 @@ var mongoose = require('mongoose'),
     UserProfile = mongoose.model('UserProfile'),
     User = mongoose.model('User'),
     config = require('meanio').getConfig(),
+    //socketshelper = require('socketshelper'),
     _ = require('lodash');
-    // async = require('async');
 
 module.exports = function(UserProfiles, http) {
-    var socket = require('meanio-socketshelper/server/config/sockets')(http); // this is hacky but works for now.
 
-
+    // var socket = require('meanio-socketshelper/server/config/sockets')(http);
+    // var socket = socketshelper.io
+    // var socket = require('../../../meanio-socketshelper/server/config/sockets')(http); // this is hacky but works for now.
     // Helper function, must go before return !
     var getUserProfile = function(req, callback) {
         if(req.user && req.user._id) {
@@ -375,7 +376,7 @@ module.exports = function(UserProfiles, http) {
                     'description':req.body.description
                 }
                 //req.log.info('emitting points socket',req.body,result);
-                socket.emit('userPoints' + req.body.userId, result);
+                //socket.emit('userPoints' + req.body.userId, result);
                 res.json(result);
             });
         },

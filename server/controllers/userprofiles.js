@@ -12,8 +12,9 @@ var mongoose = require('mongoose'),
 
 module.exports = function(UserProfiles, http) {
 
-    // var socket = require('meanio-socketshelper/server/config/sockets')(http);
-    // var socket = socketshelper.io
+   // var socket = require('meanio-socketshelper/server/config/sockets')(http);
+
+  // var socket = socketshelper.io
     // var socket = require('../../../meanio-socketshelper/server/config/sockets')(http); // this is hacky but works for now.
     // Helper function, must go before return !
     var getUserProfile = function(req, callback) {

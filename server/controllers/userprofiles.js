@@ -11,7 +11,7 @@ var mongoose = require('mongoose'),
 
 module.exports = function(UserProfiles, http) {
 
-    var socket = require('meanio-socketshelper/server/config/sockets')(http);
+    var socket = UserProfiles.io;
 
     var getUserProfile = function(req, callback) {
         if(req.user && req.user._id) {

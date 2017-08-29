@@ -503,7 +503,7 @@ module.exports = function(MeanUser) {
                 },
                 function(user, token, done) {
                     user.resetPasswordToken = token;
-                    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+                    user.resetPasswordExpires = Date.now() + 21600000; // 6 hour
                     user.save(function(err) {
                         done(err, token, user);
                     });

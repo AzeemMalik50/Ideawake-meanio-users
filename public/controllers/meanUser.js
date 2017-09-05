@@ -108,6 +108,7 @@ angular.module('mean.users')
       };
       $rootScope.$on('forgotmailsent', function(event, args){
         vm.response = args;
+        $location.url('/'); 
       });
     }
   ])

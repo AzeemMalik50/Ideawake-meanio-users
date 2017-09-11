@@ -346,11 +346,12 @@ module.exports = function(UserProfiles, http) {
                     body : req.body
                 });
             }
-
-            UserProfile.findOneAndUpdate({'user':req.body.userId},{'$inc' : {'points' : req.body.points}},{'new':true,'upsert':true},function(err,doc){
+            
+            UserProfile.findOneAndUpdate({'user':req.body.userId},{'$inc': {'points' : req.body.points}, '$push': { 'pointsLog': req.body } },{'new':true,'upsert':true},function(err,doc) {
                 if (err) {
                     return res.status(500).json({
-                        error: 'Cannot add points to userProfile'
+                        error: 'Cannot add points to userProfile',
+                        fullError: err
                     });
                 }
                 // UserProfiles.events.emit('updated', {

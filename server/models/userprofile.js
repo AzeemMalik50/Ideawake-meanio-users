@@ -50,6 +50,9 @@ var UserProfileSchema = new Schema({
     type: Number,
     default: 0
   },
+  pointsLog: {
+    type: Array
+  },
   profileImage: {
     'uploadType' : String,
     'path' : String,

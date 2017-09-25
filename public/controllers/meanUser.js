@@ -116,6 +116,9 @@ angular.module('mean.users')
       var vm = this;
       vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;
+      vm.checkPasswordToken = function() {
+        MeanUser.checkPasswordToken();
+      };
       vm.resetpassword = function() {
         MeanUser.resetpassword(this.user);
       };

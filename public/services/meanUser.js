@@ -164,6 +164,14 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         .catch(this.onIdFail.bind(this));
 
       };
+      
+    MeanUserKlass.prototype.checkPasswordToken = function(user) {
+      var deferred = $q.defer();
+      $http.get('/api/reset/' + $stateParams.tokenId)
+        .then(deferred.resolve(result.data))
+        .catch(deferred.reject(result.data));
+      return deferred.promise;
+    };
 
     MeanUserKlass.prototype.forgotpassword = function(user) {
         $http.post('/api/forgot-password', {

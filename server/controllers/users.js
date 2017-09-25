@@ -420,11 +420,29 @@ module.exports = function(MeanUser) {
                 }
             });
         },
-
+        checkResetToken: function(req, res, next) {
+            User.findOne({
+              resetPasswordToken: req.params.token,
+              resetPasswordExpires: {
+                $gt: Date.now()
+              }
+            }).exec(function(err, user) {
+              if (err) {
+                return res.status(400).json({
+                    msg: err
+                });
+              }
+              if (!user) {
+                return res.status(400).json({
+                    msg: 'Reset token invalid or expired. Tokens are only useable for 6 hours.'
+                });
+              }
+              return res.sendStatus(200);
+            })
+        }
         /**
          * Resets the password
          */
-
         resetpassword: function(req, res, next) {
             User.findOne({
                 resetPasswordToken: req.params.token,

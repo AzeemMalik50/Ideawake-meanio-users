@@ -434,12 +434,12 @@ module.exports = function(MeanUser) {
               }
               if (!user) {
                 return res.status(400).json({
-                    msg: 'Reset token invalid or expired. Tokens are only useable for 6 hours.'
+                    msg: 'Please go to the reset password page and enter your email to get a new link.'
                 });
               }
               return res.sendStatus(200);
             })
-        }
+        },
         /**
          * Resets the password
          */

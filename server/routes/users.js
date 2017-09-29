@@ -44,7 +44,7 @@ module.exports = function(MeanUser, app, circles, database, passport) {
         .post(users.forgotpassword);
 
       app.route('/api/reset/:token')
-        .get(users.checkResetToken);
+        .get(users.checkResetToken)
         .post(users.resetpassword);
 
       // Setting the local strategy route

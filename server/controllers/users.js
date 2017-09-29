@@ -420,11 +420,29 @@ module.exports = function(MeanUser) {
                 }
             });
         },
-
+        checkResetToken: function(req, res, next) {
+            User.findOne({
+              resetPasswordToken: req.params.token,
+              resetPasswordExpires: {
+                $gt: Date.now()
+              }
+            }).exec(function(err, user) {
+              if (err) {
+                return res.status(400).json({
+                    msg: err
+                });
+              }
+              if (!user) {
+                return res.status(400).json({
+                    msg: 'Please go to the reset password page and enter your email to get a new link.'
+                });
+              }
+              return res.sendStatus(200);
+            })
+        },
         /**
          * Resets the password
          */
-
         resetpassword: function(req, res, next) {
             User.findOne({
                 resetPasswordToken: req.params.token,

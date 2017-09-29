@@ -112,17 +112,20 @@ angular.module('mean.users')
       });
     }
   ])
-  .controller('ResetPasswordCtrl', ['MeanUser', '$rootScope',
-    function(MeanUser, $rootScope) {
+  .controller('ResetPasswordCtrl', ['MeanUser', '$rootScope', '$sce',
+    function(MeanUser, $rootScope, $sce) {
       var vm = this;
       vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;
+      vm.resetpassworderror = false;
+      console.log('MeanUser.checkPasswordToken()')
+      MeanUser.checkPasswordToken();
+    
       vm.resetpassword = function() {
         MeanUser.resetpassword(this.user);
       };
-      $rootScope.$on('resetpasswordfailed', function(){
-        vm.resetpassworderror = MeanUser.resetpassworderror;
+      $rootScope.$on('resetpassworderror', function(){
+        vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
       });
-
     }
   ]);

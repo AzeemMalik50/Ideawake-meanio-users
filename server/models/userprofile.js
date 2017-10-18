@@ -77,6 +77,10 @@ var UserProfileSchema = new Schema({
     'ideaDailyEmails': {
       type: Boolean,
       default: true
+    },
+    'commentReplyEmails': {
+      type: Boolean,
+      default: true
     }
   },
   deleted: {

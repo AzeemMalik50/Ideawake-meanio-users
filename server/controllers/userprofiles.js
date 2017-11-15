@@ -346,33 +346,36 @@ module.exports = function(UserProfiles, http) {
                     body : req.body
                 });
             }
-            
-            UserProfile.findOneAndUpdate({'user':req.body.userId},{'$inc': {'points' : req.body.points}, '$push': { 'pointsLog': req.body } },{'new':true,'upsert':true},function(err,doc) {
+
+            UserProfile.findOneAndUpdate({'user':req.body.userId},{'$inc' : {'points' : req.body.points}},{'new':true,'upsert':true},function(err,doc){
                 if (err) {
                     return res.status(500).json({
-                        error: 'Cannot add points to userProfile',
-                        fullError: err
+                        error: 'Cannot add points to userProfile'
                     });
                 }
-                // UserProfiles.events.emit('updated', {
-                //     action: 'updated',
-                //     user: {
-                //         name: req.user.name
-                //     },
-                //     name: "userProfile.title",
-                //     url: config.hostname + '/userprofiles/' + userProfile._id
-                // });
+
                 var result = {
+                    'date' : new Date(),
                     'total':doc.points,
                     'points':req.body.points,
                     'description':req.body.description
                 }
-                //req.log.info('emitting points socket',req.body,result);
-                // console.log('~~~~~~~~~~~~~~~~ emitting user points socket.....');
-                // console.log(req.body.userId);
 
-                socket.emit('userPoints' + req.body.userId, result);
-                res.json(result);
+                if(typeof doc.pointsLog === undefined) {
+                    doc.pointsLog = [];
+                }
+
+                doc.pointsLog.push(result);
+
+                doc.save(function(err) {
+                    socket.emit('userPoints' + req.body.userId, result);
+                    res.json(result);
+                });
+
+                //req.log.info('emitting points socket',req.body,result);
+                console.log('~~~~~~~~~~~~~~~~ emitting user points socket.....');
+
+
             });
         },
         leaderboard: function(req,res) {

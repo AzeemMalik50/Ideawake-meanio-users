@@ -50,7 +50,7 @@ var UserProfileSchema = new Schema({
     type: Number,
     default: 0
   },
-  pointsLog: {
+  pointsLog: { // gamification logging
     type: Array
   },
   profileImage: {

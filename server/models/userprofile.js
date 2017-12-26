@@ -86,6 +86,10 @@ var UserProfileSchema = new Schema({
   deleted: {
     type: Boolean,
     default: false
+  },
+  defaultLanguage:{
+    type: String,
+    default: 'en'
   }
 });
 

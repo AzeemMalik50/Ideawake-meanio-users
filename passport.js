@@ -38,7 +38,7 @@ module.exports = function(passport) {
     function(email, password, done) {
       User.findOne({
         email: email
-      }, function(err, user) {
+      }).populate("userProfile").exec(function(err, user) {
         if (err) {
           return done(err);
         }

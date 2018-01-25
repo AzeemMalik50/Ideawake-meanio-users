@@ -8,6 +8,8 @@ var mongoose  = require('mongoose'),
   crypto    = require('crypto'),
   _   = require('lodash');
 
+const Promise = require('bluebird');
+
 /**
  * Validations
  */
@@ -39,6 +41,41 @@ function unique(modelName, field, caseSensitive) {
       respond(false);
   };
 }
+
+
+function createUserProfile(user, callback) {
+  var UserProfile = mongoose.model('UserProfile');
+  
+  UserProfile.find({'user' : user._id}).exec(function(err, results){
+      if(results && results.length > 0) {
+          callback(results[0]);
+      } else {
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+          var newUserProfile = new UserProfile();
+          newUserProfile.user = user._id;
+          user.name = (!user.name) ? 'Unknown User' : user.name;
+          newUserProfile.displayName = user.name;
+          newUserProfile.description = user.name;
+          newUserProfile.profileImage = {};
+          newUserProfile.save(function(err) {
+              if (err) {
+                  console.log(err);
+                  callback(null);
+              } else {
+                  console.log('Created new user profile');
+                  user.userProfile =  newUserProfile._id;
+                  user.save(function(error) {
+                      if(error) {
+                          console.log('Error saving userProfile to User object');
+                      }
+                  });
+                  callback(newUserProfile);
+              }
+          });
+      }
+   });
+}
+
 
 // var validateUniqueEmail = function(value, callback) {
 //   var User = mongoose.model('User');
@@ -148,7 +185,8 @@ var UserSchema = new Schema({
   lastLogin: {
     type: Date,
     default: Date.now
-  }
+  },
+  adfs_metadata: {}
 }, schemaOptions);
 
 
@@ -158,6 +196,89 @@ UserSchema.statics.load = function(id, cb) {
   })
   .populate('userProfile')
   .exec(cb);
+};
+
+
+UserSchema.statics.findOneUser = function(query, resolveIfNotFound) {
+  return this.findOne(query)
+  .populate('userProfile')
+  .exec()
+  .then(user => {
+    return user ?
+      user : (resolveIfNotFound ? undefined : Promise.reject('Unknown user'));
+  });
+};
+
+UserSchema.statics.createUser = function(userData, done){
+  var user = new this(userData);
+  user.roles ? user.roles : ['authenticated'];
+
+  user.save(function(err) {
+    if (err) {
+        switch (err.code) {
+            case 11000:
+            case 11001:
+            return done([{
+              msg: 'Email or username already taken',
+              param: 'username'
+          }]);
+            break;
+            default:
+            var modelErrors = [];
+
+            if (err.errors) {
+                for (var x in err.errors) {
+                    modelErrors.push({
+                        param: x,
+                        msg: err.errors[x].message,
+                        value: err.errors[x].value
+                    });
+                }
+                return done(modelErrors);
+              //  res.status(400).json(modelErrors);
+            }
+        }
+        return done(err);
+      //  return res.status(400);
+    }
+
+    // if(user.userProfile === null) {
+        createUserProfile(user, function(ret) {
+            var payload = user;
+            user.userProfile = ret;
+            return done(null, user);
+          //  payload.redirect = req.body.redirect;
+          //  var escaped = JSON.stringify(payload);
+           // escaped = encodeURI(escaped);
+           /*  req.logIn(user, function(err) {
+                if (err) { return next(err); }
+
+                MeanUser.events.emit('created', {
+                    action: 'created',
+                    user: {
+                        name: req.user.name,
+                        username: user.username,
+                        email: user.email
+                    }
+                });
+
+                // We are sending the payload inside the token
+                var token = jwt.sign(escaped, config.secret);
+                res.json({
+                  token: token,
+                  redirect: config.strategies.landingPage
+                });
+            }); */
+        });
+});
+}
+
+UserSchema.statics.findAndAuthenticate = function(query, password) {
+  return this.findOneUser(query)
+  .then(user => {
+    return user.authenticate(password) ?
+      Promise.resolve(user) : Promise.reject('Invalid password');
+  });
 };
 
 

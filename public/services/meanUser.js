@@ -69,7 +69,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Workaround for Angular 1.6.x
       if (response.data)
         response = response.data;
-
+        response.token = response.token ?  response.token: localStorage.getItem('JWT')
       var encodedUser, user, destination;
 
       if (angular.isDefined(response.token)) {
@@ -96,15 +96,19 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Add circles info to user
       $http.get('/api/circles/mine').then(function(response) {
         self.acl = response.data;
-
+        
+        $rootScope.loading = false;   
         $rootScope.$emit('loggedin', userObj);
+        
         Global.authenticate(userObj);
         if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
           var redirect = $cookies.get('redirect');
           $cookies.remove('redirect');
-          $location.path(redirect);
+          $location.url(redirect);
         } else if (destination) {
-          $location.path(destination);
+          $location.url(destination);
+        } else {
+          $location.url('/');
         }
       });
     };
@@ -127,6 +131,15 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       $rootScope.$emit('registerfailed');
     };
 
+    // adfs error handling
+    MeanUserKlass.prototype.onAdfsTokenFail = function (response) {
+
+      if (response.data)
+        response = response.data;
+
+        $rootScope.$emit('adfsTokenFailed');
+    };
+
     var MeanUser = new MeanUserKlass();
 
     MeanUserKlass.prototype.login = function (user) {
@@ -139,6 +152,14 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         })
         .then(this.onIdentity.bind(this))
         .catch(this.onIdFail.bind(this));
+    };
+    // login with saml 
+    MeanUserKlass.prototype.loginSaml = function (token) {
+      $http.get('/api/verifyToken', {
+          token: token,
+        })
+        .then(this.onIdentity.bind(this))
+        .catch(this.onAdfsTokenFail.bind(this));
     };
 
     MeanUserKlass.prototype.register = function(user) {

@@ -218,10 +218,7 @@ module.exports = function(MeanUser) {
                         console.log('BAILING OUT!!!!!');
                         return res.status(400);
                     }
-
-
-                    var user = new User(req.body);
-                    user.provider = 'local';
+                    req.body.provider = 'local';
 
                     // because we set our user.provider to local our models/user.js validation will always be true
                     req.assert('name', 'You must enter a name').notEmpty();
@@ -234,9 +231,8 @@ module.exports = function(MeanUser) {
                     if (errors) {
                         return res.status(400).send(errors);
                     }
-
-                    user.roles ? user.roles : ['authenticated'];
-                    user.save(function(err) {
+                 
+                  /*   user.save(function(err) {
                         if (err) {
                             switch (err.code) {
                                 case 11000:
@@ -318,6 +314,37 @@ module.exports = function(MeanUser) {
                         //     res.status(200);
                         // }
                     });
+
+ */
+                    User.createUser(req.body, function(err, user){
+                        if(err){
+                            return res.status(400).json(err);
+                        }else{
+                            var payload = user;
+                            payload.redirect = req.body.redirect;
+                            var escaped = JSON.stringify(payload);
+                            escaped = encodeURI(escaped);
+                            req.logIn(user, function(err) {
+                                if (err) { return next(err); }
+    
+                                MeanUser.events.emit('created', {
+                                    action: 'created',
+                                    user: {
+                                        name: req.user.name,
+                                        username: user.username,
+                                        email: user.email
+                                    }
+                                });
+    
+                                // We are sending the payload inside the token
+                                var token = jwt.sign(escaped, config.secret);
+                                return res.json({
+                                  token: token,
+                                  redirect: config.strategies.landingPage
+                                });
+                            });
+                        }
+                    }) 
                 }
             });
         },

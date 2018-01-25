@@ -6,12 +6,15 @@ var mongoose = require('mongoose'),
 
 var findUser = exports.findUser = function(id, cb) {
   User.findOne({
-        _id: id
-    }, function(err, user) {
-        if (err || !user) return cb(null);
-        cb(user);
-    });
+    _id: id
+  }, function(err, user) {
+    if (err || !user) return cb(null);
+    cb(user);
+  });
 };
+
+const jwt = require('jsonwebtoken');
+const config = require('meanio').getConfig();
 
 
 /**
@@ -62,4 +65,64 @@ exports.isMongoId = function(req, res, next) {
       return res.status(500).send('Parameter passed is not a valid Mongo ObjectId');
   }
   next();
+};
+
+
+exports.generateAuthToken = function(MeanUser) {
+  return (req, res, next) => {
+    try {
+      let payload = req.user;
+      let escaped, token;
+
+      if (MeanUser) {
+        MeanUser.events.publish({
+          action: 'logged_in',
+          user: {
+            name: req.user.name
+          }
+        });
+      }
+
+      (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) &&
+      (payload.redirect = req.body.redirect);
+
+      escaped = JSON.stringify(payload);
+      escaped = encodeURI(escaped);
+
+      req.token = jwt.sign(escaped, config.secret);
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  }
+};
+
+
+exports.SAMLAuthorization = function(req, res, next) {
+  User.findOneUser({email: req.user.upn.toLowerCase()}, true)
+  .then(user => {
+    if (!user) {
+      var newUser = {
+        email: req.user.upn,
+        name: req.user.name,
+        adfs_metadata: req.user
+      };
+       return User.createUser(newUser, function(err, user){
+        if(err){
+           throw err;
+        } else {
+          req.user =user;
+          next();
+        }
+      });
+    } else {
+      req.user =user;    
+      next()
+    }
+  }).catch(err => {
+    console.log('Error creating user on SSO', err);
+    res.json({err});
+    // TODO: this error needs to be handled using a proper error response page
+  });
 };

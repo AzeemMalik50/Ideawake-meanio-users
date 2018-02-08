@@ -89,7 +89,7 @@ var UserProfileSchema = new Schema({
   },
   defaultLanguage:{
     type: String,
-    default: 'en-Us'
+    default: 'en-US'
   }
 });
 

@@ -50,6 +50,8 @@ module.exports = function(UserProfiles, app, circles, database, io) {
     .put(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, hasPermissions, userProfiles.update);
     //.delete(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, userProfiles.destroy);
 
+  app.route('/api/userprofiles/:userProfileId/demographics')
+    .put(hasAuthorization, userProfiles.updateDemographicsAndLanguage);
 
   // Finish with setting up the articleId param
   app.param('userProfileId', userProfiles.userProfile);

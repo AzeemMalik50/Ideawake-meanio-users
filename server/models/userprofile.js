@@ -104,6 +104,18 @@ var UserProfileSchema = new Schema({
   }
 });
 
+
+UserProfileSchema.methods.updateDemographicsAndLanguage =
+  function(demographics, language) {
+    this.demographics = Object.assign(this.demographics, demographics);
+    if (language) {
+      this.defaultLanguage = language;
+    }
+
+    return this.save();
+  };
+
+
 /**
  * Validations
  */

@@ -90,6 +90,17 @@ var UserProfileSchema = new Schema({
   defaultLanguage:{
     type: String,
     default: 'en-US'
+  },
+  demographics: {
+    educationLevel: String,
+    majorEducation: String,
+    currentYears: String,
+    totalYears: String,
+    cityAndState: String,
+    currentTitle: String,
+    isManager: Boolean,
+    totalSubordinates: Number,
+    directSupervisorTitle: String
   }
 });
 

@@ -129,8 +129,8 @@ angular.module('mean.users')
       });
     }
   ])
-  .controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location',
-    function (MeanUser, $rootScope, $sce, $location) {
+  .controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies',
+    function (MeanUser, $rootScope, $sce, $location, $cookies) {
       var vm = this;
       vm.user = {};
       vm.message = 'Verifying Your request please wait...';

@@ -49,7 +49,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     MWs.SAMLAuthorization,
     authTokenMW(MeanUser),
     function (req, res) {
-      res.redirect(`/saml/auth?t=${req.token}`);
+      res.redirect(`/saml/auth?t=${req.token}&n=${!!req.isUserNew}`);
     }
   );
 

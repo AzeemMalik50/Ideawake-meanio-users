@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$location', '$stateParams',
-  '$cookies', '$q', '$timeout', '$meanConfig', 'Global',
-  function($rootScope, $http, $location, $stateParams, $cookies, $q, $timeout, $meanConfig, Global) {
+  '$cookies', '$q', '$timeout', '$meanConfig', 'Global', 'localization',
+  function($rootScope, $http, $location, $stateParams, $cookies, $q, $timeout, $meanConfig, Global, localization) {
 
     var self;
 
@@ -76,6 +76,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         localStorage.setItem('JWT', response.token);
         encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
         user = JSON.parse(encodedUser);
+        localization.changeLanguage(user.userProfile.defaultLanguage);
       }
 
       destination = angular.isDefined(response.redirect) ? response.redirect : destination;
@@ -216,6 +217,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         localStorage.removeItem('JWT');
         $rootScope.$emit('logout');
         Global.authenticate();
+        localization.changeLanguage();
       });
     };
 

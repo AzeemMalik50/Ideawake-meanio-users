@@ -320,7 +320,7 @@ module.exports = function(MeanUser) {
                         if(err){
                             return res.status(400).json(err);
                         }else{
-                            var payload = req.user && req.user._doc ? req.user._doc : req.user;
+                            var payload = user._doc;
                             if (req.body && req.body.redirect) {
                                 payload.redirect = req.body.redirect
                             }

@@ -128,12 +128,11 @@ angular.module('mean.users')
         vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
       });
     }
-  ])
-  .controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location',
+  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location',
   function(MeanUser, $rootScope, $sce, $location) {
     var vm = this;
     vm.user = {};
-    vm.message = 'Verifying your request, please wait...';
+    vm.message = 'Verifying your request please wait...';
     vm.params = $location.search();
     $rootScope.loading = true;
 
@@ -143,11 +142,10 @@ angular.module('mean.users')
       $rootScope.loading = false;   
     });
      /* service to verify saml token */
-    if (vm.params.t){
+    if(vm.params.t){
       localStorage.setItem('JWT', vm.params.t);
       MeanUser.loginSaml(vm.token);
-      $location.url('/');
-    } else {
+    }else{
       $rootScope.$emit('adfsTokenFailed');
     }
   }

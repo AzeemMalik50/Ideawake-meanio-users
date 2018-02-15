@@ -37,6 +37,7 @@ function createUserProfile(user, callback) {
             user.name = (!user.name) ? 'Unknown User' : user.name;
             newUserProfile.displayName = user.name;
             newUserProfile.description = user.name;
+            newUserProfile.defaultLanguage = user.defaultLanguage || 'en-US';
             newUserProfile.profileImage = {};
             newUserProfile.save(function(err) {
                 if (err) {

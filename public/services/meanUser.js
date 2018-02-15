@@ -168,6 +168,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         confirmPassword: user.confirmPassword,
         username: user.username,
         name: user.name,
+        defaultLanguage: user.defaultLanguage || 'en-US',
         inviteId: (user.inviteId) ? user.inviteId : null,
         roles: user.roles
       })

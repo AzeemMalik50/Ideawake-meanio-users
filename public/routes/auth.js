@@ -15,9 +15,31 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
 	    }
 		}
 
-    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', function($cookies, $location) {
+    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', '$http', 'jwtHelper', function($cookies, $location, $http, jwtHelper) {
       if (localStorageTest()) {
-      	return localStorage.getItem('JWT');
+        var lcJwt = localStorage.getItem('JWT');
+        var rft = localStorage.getItem('rft');
+        if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){
+          var user = jwtHelper.decodeToken(lcJwt);
+          return $http({
+            url: '/api/refreshtoken',
+            skipAuthorization: true,
+            method: 'POST',
+            data: { refreshToken: rft, id: user._id }
+        }).then(function(response) {
+              if(response && response.data){
+                localStorage.setItem('JWT', response.data.token);
+                return response.token;
+              }
+            })
+            .catch(function(err) {
+              console.log(err);
+              localStorage.removeItem('JWT');
+              return;
+            });
+        } else {
+          return lcJwt; 
+        }
       } else {
         $cookies.put('nolocalstorage', 'true');
         $location.url('/unsupported-browser');

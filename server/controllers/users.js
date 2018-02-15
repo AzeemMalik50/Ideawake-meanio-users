@@ -323,7 +323,6 @@ module.exports = function(MeanUser) {
                             payload.redirect = req.body.redirect;
                          //   var escaped = JSON.stringify(payload);
                           //  escaped = encodeURI(escaped);
-
                             req.logIn(user, function(err) {
                                 if (err) { return next(err); }
     

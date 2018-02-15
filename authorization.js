@@ -88,7 +88,6 @@ exports.generateAuthToken = function(MeanUser) {
       (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) &&
       (payload.redirect = req.body.redirect);
 
-
     /*   escaped = JSON.stringify(payload);
       escaped = encodeURI(escaped); */
 
@@ -151,7 +150,6 @@ exports.rejectRefreshToken = function(req, res, next) {
   next();
 };
 
-
 exports.SAMLAuthorization = function(req, res, next) {
   User.findOneUser({email: req.user.upn.toLowerCase()}, true)
   .then(user => {
@@ -170,9 +168,7 @@ exports.SAMLAuthorization = function(req, res, next) {
         }
       });
     } else {
-
       req.user = user;    
-
       next()
     }
   }).catch(err => {

@@ -98,8 +98,8 @@ angular.module('mean.users')
       });
     }
   ])
-  .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope',
-    function (MeanUser, $rootScope) {
+  .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope', '$location',
+    function (MeanUser, $rootScope, $location) {
       var vm = this;
       vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;

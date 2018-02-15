@@ -37,6 +37,7 @@ function createUserProfile(user, callback) {
             user.name = (!user.name) ? 'Unknown User' : user.name;
             newUserProfile.displayName = user.name;
             newUserProfile.description = user.name;
+            newUserProfile.defaultLanguage = user.defaultLanguage || 'en-US';
             newUserProfile.profileImage = {};
             newUserProfile.save(function(err) {
                 if (err) {
@@ -320,7 +321,9 @@ module.exports = function(MeanUser) {
                             return res.status(400).json(err);
                         }else{
                             var payload = req.user && req.user._doc ? req.user._doc : req.user;
-                            payload.redirect = req.body.redirect;
+                            if (req.body && req.body.redirect) {
+                                payload.redirect = req.body.redirect
+                            }
                          //   var escaped = JSON.stringify(payload);
                           //  escaped = encodeURI(escaped);
                             req.logIn(user, function(err) {
@@ -340,7 +343,7 @@ module.exports = function(MeanUser) {
                               
                                 return res.json({
                                   token: token,
-                                  redirect: config.strategies.landingPage
+                                  redirect:  payload.redirect || config.strategies.landingPage
                                 });
                             });
                         }

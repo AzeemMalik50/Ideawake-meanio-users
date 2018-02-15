@@ -1,9 +1,8 @@
 'use strict';
 
 angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$location', '$stateParams',
-  '$cookies', '$q', '$timeout', '$meanConfig', 'Global',
-  function($rootScope, $http, $location, $stateParams, $cookies, $q, $timeout, $meanConfig, Global) {
-
+  '$cookies', '$q', '$timeout', '$meanConfig', 'Global', 'jwtHelper',
+  function($rootScope, $http, $location, $stateParams, $cookies, $q, $timeout, $meanConfig, Global, jwtHelper, localization) {
     var self;
 
     function escape(html) {
@@ -74,8 +73,12 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
 
       if (angular.isDefined(response.token)) {
         localStorage.setItem('JWT', response.token);
-        encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
-        user = JSON.parse(encodedUser);
+        user = jwtHelper.decodeToken(response.token);
+       /*  encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
+        user = JSON.parse(encodedUser); */
+      }
+      if (angular.isDefined(response.refreshToken)) {
+        localStorage.setItem('rft', response.refreshToken);
       }
 
       destination = angular.isDefined(response.redirect) ? response.redirect : destination;
@@ -107,6 +110,8 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
           $location.url(redirect);
         } else if (destination) {
           $location.url(destination);
+        } else {
+          $location.url('/');
         }
       });
     };
@@ -216,6 +221,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         localStorage.removeItem('JWT');
         $rootScope.$emit('logout');
         Global.authenticate();
+        localization.changeLanguage();
       });
     };
 

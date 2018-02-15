@@ -213,7 +213,9 @@ module.exports = function(UserProfiles, http) {
                         error: 'Cannot save the userProfile'
                     });
                 }
-
+                
+                // omit __v prop 
+                req.body.userProfile = _.omit(req.body.userProfile, ['__v']);
                 userProfile = _.extend(userProfile, req.body.userProfile);
 
                 //req.log.info(userProfile);

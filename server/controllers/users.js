@@ -91,12 +91,11 @@ module.exports = function(MeanUser) {
          * Auth callback
          */
         authCallback: function(req, res) {
-            var payload = req.user;
-            var escaped = JSON.stringify(payload);
-            escaped = encodeURI(escaped);
+            var payload = req.user && req.user._doc ? req.user._doc : req.user;
+            /* var escaped = JSON.stringify(payload);
+            escaped = encodeURI(escaped); */
             // We are sending the payload inside the token
-            var token = jwt.sign(escaped, config.secret);
-
+            var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
             res.cookie('token', token);
 
             var destination = req.redirect || config.strategies.landingPage;
@@ -320,10 +319,10 @@ module.exports = function(MeanUser) {
                         if(err){
                             return res.status(400).json(err);
                         }else{
-                            var payload = user;
+                            var payload = req.user && req.user._doc ? req.user._doc : req.user;
                             payload.redirect = req.body.redirect;
-                            var escaped = JSON.stringify(payload);
-                            escaped = encodeURI(escaped);
+                         //   var escaped = JSON.stringify(payload);
+                          //  escaped = encodeURI(escaped);
                             req.logIn(user, function(err) {
                                 if (err) { return next(err); }
     
@@ -337,7 +336,8 @@ module.exports = function(MeanUser) {
                                 });
     
                                 // We are sending the payload inside the token
-                                var token = jwt.sign(escaped, config.secret);
+                                var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
+                              
                                 return res.json({
                                   token: token,
                                   redirect: config.strategies.landingPage
@@ -376,10 +376,10 @@ module.exports = function(MeanUser) {
                         return res.json(req.user);
                     } else {
                         req.user.userProfile = profile;
-                        var payload = req.user;
-                        var escaped = JSON.stringify(payload);
-                        escaped = encodeURI(escaped);
-                        var token = jwt.sign(escaped, config.secret);
+                        var payload = req.user && req.user._doc ? req.user._doc : req.user;                   
+                       /*  var escaped = JSON.stringify(payload);
+                        escaped = encodeURI(escaped); */
+                        var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
                         res.json({ token: token });
                     }
                 });
@@ -497,9 +497,10 @@ module.exports = function(MeanUser) {
                 user.resetPasswordToken = undefined;
                 user.resetPasswordExpires = undefined;
                 user.save(function(err) {
-                    var escaped = JSON.stringify(user);
-                        escaped = encodeURI(escaped);
-                    var token = jwt.sign(escaped, config.secret);
+                    var payload = user && user._doc ? user._doc : user;                             
+                 /*    var escaped = JSON.stringify(user);
+                        escaped = encodeURI(escaped); */
+                    var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});                    
                     var destination = req.redirect || config.strategies.landingPage;
 
                     MeanUser.events.emit('reset_password', {

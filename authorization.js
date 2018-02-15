@@ -77,7 +77,7 @@ exports.generateAuthToken = function(MeanUser) {
       let escaped, token;
 
       if (MeanUser) {
-        MeanUser.events.publish({
+        MeanUser.events.emit('logged_in', {
           action: 'logged_in',
           user: {
             name: req.user.name

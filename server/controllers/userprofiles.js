@@ -412,6 +412,17 @@ module.exports = function(UserProfiles, http) {
                   res.json(result);
             });
             /* jshint ignore:end */
+        },
+
+        updateDemographicsAndLanguage: function(req, res) {
+            req.userProfile.updateDemographicsAndLanguage(
+                req.body.demographics || {},
+                req.body.language
+            ).then(() => res.json(req.userProfile))
+            .catch(err => res.status(500).json({
+                err,
+                message: 'Error updating demographics.'
+            }));
         }
 
     };

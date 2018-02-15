@@ -91,8 +91,31 @@ var UserProfileSchema = new Schema({
     type: String,
     default: 'en-US',
     enum: ['en-US', 'fr', 'es']
+  },
+  demographics: {
+    educationLevel: String,
+    majorEducation: String,
+    currentYears: String,
+    totalYears: String,
+    cityAndState: String,
+    currentTitle: String,
+    isManager: Boolean,
+    totalSubordinates: Number,
+    directSupervisorTitle: String
   }
 });
+
+
+UserProfileSchema.methods.updateDemographicsAndLanguage =
+  function(demographics, language) {
+    this.demographics = Object.assign(this.demographics, demographics);
+    if (language) {
+      this.defaultLanguage = language;
+    }
+
+    return this.save();
+  };
+
 
 /**
  * Validations

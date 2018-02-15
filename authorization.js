@@ -159,8 +159,9 @@ exports.SAMLAuthorization = function(req, res, next) {
         name: req.user.name,
         adfs_metadata: req.user
       };
-       return User.createUser(newUser, function(err, user){
-        if(err){
+      req.isUserNew = true;
+      return User.createUser(newUser, function(err, user){
+        if (err) {
            throw err;
         } else {
           req.user = user;

@@ -138,7 +138,7 @@ angular.module('mean.users')
 
       $rootScope.$on('adfsTokenFailed', function () {
         localStorage.removeItem('JWT');
-        vm.erroprMessage = $sce.trustAsHtml('This link is not valid. Please go to the <a href="/">home</a> page.');
+        vm.errorMessage = $sce.trustAsHtml('This link is not valid. Please go to the <a href="/">home</a> page.');
         $rootScope.loading = false;
       });
       /* service to verify saml token */

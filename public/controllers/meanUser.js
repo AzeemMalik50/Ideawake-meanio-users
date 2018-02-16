@@ -143,6 +143,7 @@ angular.module('mean.users')
     });
      /* service to verify saml token */
       if (vm.params.n) {
+        console.log(vm.params);
         // check that if user has got any parameter named n then it mean it is a new user
         // and need to complete profile
         localStorage.setItem('JWT', vm.params.t);

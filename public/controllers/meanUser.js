@@ -143,7 +143,7 @@ angular.module('mean.users')
         $rootScope.loading = false;
       });
       /* service to verify saml token */
-      if (vm.params.n) {
+      if (vm.params.n == true) {
         // check that if user has got any parameter named n then it mean it is a new user
         // and need to complete profile
         localStorage.setItem('JWT', vm.params.t);

@@ -1,7 +1,9 @@
 'use strict';
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
-  _ = require('lodash');
+  randtoken = require('rand-token'),
+  _ = require('lodash'),
+  refreshTokens = {};
 
 
 var findUser = exports.findUser = function(id, cb) {
@@ -71,7 +73,7 @@ exports.isMongoId = function(req, res, next) {
 exports.generateAuthToken = function(MeanUser) {
   return (req, res, next) => {
     try {
-      let payload = req.user;
+      let payload = _.omit(req.user._doc, ['salt', 'hashed_password']);    
       let escaped, token;
 
       if (MeanUser) {
@@ -86,10 +88,10 @@ exports.generateAuthToken = function(MeanUser) {
       (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) &&
       (payload.redirect = req.body.redirect);
 
-      escaped = JSON.stringify(payload);
-      escaped = encodeURI(escaped);
+    /*   escaped = JSON.stringify(payload);
+      escaped = encodeURI(escaped); */
 
-      req.token = jwt.sign(escaped, config.secret);
+      req.token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
 
       next();
     } catch (err) {
@@ -98,6 +100,55 @@ exports.generateAuthToken = function(MeanUser) {
   }
 };
 
+/* Generating refresh token MW */
+exports.generateRefreshToken = function(req, res, next) {
+    try {
+      var refreshToken = randtoken.uid(256);
+      refreshTokens[refreshToken] = req.user._id;
+      req.refreshToken = refreshToken;
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+};
+
+/* Valdating refresh token MW */
+exports.validateRefreshToken = function(req, res, next) {
+
+    req.assert('id', 'User id is required!').notEmpty();
+    req.assert('refreshToken', 'Refresh token is required!');
+    var errors = req.validationErrors();
+    if (errors) {
+        return res.status(400).send(errors);
+    }
+
+    try {
+      var id = req.body.id;
+      var refreshToken = req.body.refreshToken;
+      if((refreshToken in refreshTokens) && (refreshTokens[refreshToken] == id)) {
+        findUser(id, function(user) {
+          if (!user) return res.status(401).send('User is not authorized');
+          req.user = user;
+          next();
+      });
+      }
+      else {
+        return res.status(401).send('Unauthorized!');
+      }
+    } catch (err) {
+      next(err);
+    }
+};
+
+/* Deleting refresh token MW */
+exports.rejectRefreshToken = function(req, res, next) {
+  var refreshToken = req.body.refreshToken 
+  if(refreshToken in refreshTokens) {
+    delete refreshTokens[refreshToken]
+  } 
+  next();
+};
 
 exports.SAMLAuthorization = function(req, res, next) {
   User.findOneUser({email: req.user.upn.toLowerCase()}, true)
@@ -113,17 +164,16 @@ exports.SAMLAuthorization = function(req, res, next) {
         if (err) {
            throw err;
         } else {
-          req.user =user;
+          req.user = user;
           next();
         }
       });
     } else {
-      req.user =user;    
+      req.user = user;    
       next()
     }
   }).catch(err => {
     console.log('Error creating user on SSO', err);
-    res.json({err});
-    // TODO: this error needs to be handled using a proper error response page
+    next(err);
   });
 };

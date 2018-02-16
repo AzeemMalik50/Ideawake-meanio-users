@@ -22,8 +22,20 @@ module.exports = function (MeanUser, app, circles, database, passport) {
 
   var loginPage = config.public.loginPage;
 
+  // refresh token 
+  app.route('/api/refreshtoken')
+  .post(MWs.validateRefreshToken,
+  authTokenMW(MeanUser),
+  function (req, res) {
+    res.json({
+      token: req.token
+    });
+  });
+
   app.route('/api/logout')
-    .get(users.signout);
+  // deleting refresh token
+    .get(MWs.rejectRefreshToken,
+      users.signout);
   app.route('/api/users/me')
     .get(users.me)
     .put(hasAuthorization, users.update);
@@ -56,11 +68,14 @@ module.exports = function (MeanUser, app, circles, database, passport) {
   // =======================================
 
 
-  app.route('/api/verifyToken').get(
+  app.route('/api/verifyToken')
+  .get(MWs.generateRefreshToken,
     (req, res) => {
       if (req.user) {
+        console.log(req.query);
         res.json({
           user: req.user,
+          refreshToken : req.refreshToken,
           redirect: req.query.redirect
         });
       } else {
@@ -89,10 +104,12 @@ module.exports = function (MeanUser, app, circles, database, passport) {
           failureFlash: false
         }),
         authTokenMW(MeanUser),
+        MWs.generateRefreshToken,
         function (req, res) {
           res.json({
             token: req.token,
             user: req.user,
+            refreshToken : req.refreshToken,
             redirect: req.redirect || config.strategies.landingPage
           });
         }
@@ -192,7 +209,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     // Setting the facebook oauth routes
     app.route('/api/auth/slack')
       .get(passport.authenticate('slack', {
-        scope: ['users:read'],
+        scope: ['users:read', 'identity.basic'],
         failureRedirect: loginPage,
       }), users.signin);
 

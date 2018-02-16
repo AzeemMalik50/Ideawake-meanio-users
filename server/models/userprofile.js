@@ -89,7 +89,8 @@ var UserProfileSchema = new Schema({
   },
   defaultLanguage:{
     type: String,
-    default: 'en-US'
+    default: 'en-US',
+    enum: ['en-US', 'fr', 'es']
   },
   demographics: {
     educationLevel: String,

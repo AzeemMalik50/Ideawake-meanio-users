@@ -158,3 +158,4 @@ angular.module('mean.users')
       }
     }
   ]);
+

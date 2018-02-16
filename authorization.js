@@ -26,10 +26,10 @@ exports.requiresLoginCheckDb = function(req, res, next) {
   //console.log(".................................Checking auth.requiresLogin.................................");
 
   if (!req.isAuthenticated()) {
-    return res.status(401).send('User is not authorized');
+    return res.status(403).send('User is not authorized');
   }
   findUser(req.user._id, function(user) {
-      if (!user) return res.status(401).send('User is not authorized');
+      if (!user) return res.status(403).send('User is not authorized');
       req.user = user;
       next();
   });
@@ -37,7 +37,7 @@ exports.requiresLoginCheckDb = function(req, res, next) {
 
 exports.requiresLogin = function requiresLogin(req, res, next) {
   if (!req.isAuthenticated()) {
-    return res.status(401).send('User is not authorized');
+    return res.status(403).send('User is not authorized');
   }
   next();
 };
@@ -48,12 +48,12 @@ exports.requiresLogin = function requiresLogin(req, res, next) {
  */
 exports.requiresAdmin = function(req, res, next) {
   if (!req.isAuthenticated()) {
-    return res.status(401).send('User is not authorized');
+    return res.status(403).send('User is not authorized');
   }
   findUser(req.user._id, function(user) {
-      if (!user) return res.status(401).send('User is not authorized');
+      if (!user) return res.status(403).send('User is not authorized');
 
-      if (req.user.roles.indexOf('admin') === -1) return res.status(401).send('User is not authorized');
+      if (req.user.roles.indexOf('admin') === -1) return res.status(403).send('User is not authorized');
       req.user = user;
       next();
   });
@@ -131,9 +131,8 @@ exports.validateRefreshToken = function(req, res, next) {
           if (!user) return res.status(401).send('User is not authorized');
           req.user = user;
           next();
-      });
-      }
-      else {
+        });
+      } else {
         return res.status(401).send('Unauthorized!');
       }
     } catch (err) {

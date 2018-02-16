@@ -8,7 +8,7 @@ const authTokenMW = MWs.generateAuthToken;
 
 var hasAuthorization = function (req, res, next) {
   if (!req.user.isAdmin || req.user._id.equals(req.user._id)) {
-    return res.status(401).send('User is not authorized');
+    return res.status(403).send('User is not authorized');
   }
   next();
 };

@@ -110,9 +110,10 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
           $location.url(redirect);
         } else if (destination) {
           $location.url(destination);
-        } else {
-          $location.url('/');
         }
+        // else {
+        //   $location.url('/');
+        // }
       });
     };
 

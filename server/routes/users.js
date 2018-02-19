@@ -79,6 +79,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
           redirect: req.query.redirect
         });
       } else {
+        console.log('token verification failed');
         res.status(401).end();
       }
     }

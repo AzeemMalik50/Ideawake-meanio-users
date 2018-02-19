@@ -133,7 +133,7 @@ exports.validateRefreshToken = function(req, res, next) {
           next();
         });
       } else {
-        return res.status(401).send('Unauthorized!');
+        return res.status(401).send('Unauthorized or bad refresh token!');
       }
     } catch (err) {
       next(err);

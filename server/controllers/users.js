@@ -337,7 +337,7 @@ module.exports = function(MeanUser) {
                                         email: user.email
                                     }
                                 });
-                                let cleansedProfile = _.omit(profile, ['pointsLog']);
+                                let cleansedProfile = _.omit(payload, ['userProfile.pointsLog']);
                                 // We are sending the payload inside the token
                                 var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
                               

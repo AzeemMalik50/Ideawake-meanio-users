@@ -73,7 +73,9 @@ exports.isMongoId = function(req, res, next) {
 exports.generateAuthToken = function(MeanUser) {
   return (req, res, next) => {
     try {
-      let payload = _.omit(req.user._doc, ['salt', 'hashed_password', 'userProfile.pointsLog']);
+      let payload = _.omit(req.user._doc, ['salt', 'hashed_password']);
+      let cleansedProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+      payload.userProfile = cleansedProfile;
       let escaped, token;
 
       if (MeanUser) {
@@ -128,7 +130,9 @@ exports.validateRefreshToken = function(req, res, next) {
       var refreshToken = req.body.refreshToken;
       if((refreshToken in refreshTokens) && (refreshTokens[refreshToken] == id)) {
         findUser(id, function(user) {
-          if (!user) return res.status(401).send('User is not authorized');
+          if (!user) return res.status(401).send('User not found in validateRefreshToken');
+          let cleansedProfile = _.omit(user.userProfile, ['pointsLog']);
+          user.userProfile = cleansedProfile;
           req.user = user;
           next();
         });

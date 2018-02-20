@@ -1,7 +1,6 @@
 'use strict';
 
 var config = require('meanio').getConfig();
-var jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 const MWs = require('../../authorization');
 
 const authTokenMW = MWs.generateAuthToken;
@@ -80,7 +79,8 @@ module.exports = function (MeanUser, app, circles, database, passport) {
         });
       } else {
         console.log('token verification failed');
-        res.status(401).end();
+        res.redirect('/auth/login');
+        // res.status(401).end();
       }
     }
   )

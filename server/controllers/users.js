@@ -66,7 +66,6 @@ function updateLastSeenTime(user, callback) {
         user.lastSeen = now;
         update = true;
     } else {
-        // console.log('Old User Last Seen: ', user.lastSeen);
         console.log('New Date', now);
         console.log('Old Date', user.lastSeen.getTime())
         if((now) - user.lastSeen.getTime() > config.userLastSeenTimeout){
@@ -96,6 +95,8 @@ module.exports = function(MeanUser) {
             /* var escaped = JSON.stringify(payload);
             escaped = encodeURI(escaped); */
             // We are sending the payload inside the token
+            let cleansedProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+            payload.userProfile = cleansedProfile;
             var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
             res.cookie('token', token);
 
@@ -337,9 +338,9 @@ module.exports = function(MeanUser) {
                                         email: user.email
                                     }
                                 });
-                                let cleansedProfile = _.omit(payload, ['userProfile.pointsLog']);
+                                let cleansedPayload = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
                                 // We are sending the payload inside the token
-                                var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
+                                var token = jwt.sign(cleansedPayload, config.secret, {expiresIn: config.tokenExpiry});
                               
                                 return res.json({
                                   token: token,
@@ -359,7 +360,8 @@ module.exports = function(MeanUser) {
                     if (err) return next(err);
                     if(user.userProfile === null) {
                         createUserProfile(user, function(profile) {
-                            user.userProfile = profile;
+                            let cleansedProfile = _.omit(profile, ['pointsLog']);
+                            user.userProfile = cleansedProfile;
                             res.send(user ? user : '0');
                         });
                     } else {
@@ -381,7 +383,8 @@ module.exports = function(MeanUser) {
                     } else {
                         req.user.userProfile = cleansedProfile;
                         let toEncode = req.user && req.user._doc ? req.user._doc : req.user;
-                        let payload = _.omit(toEncode, ['salt', 'hashed_password', 'userProfile.pointsLog']);               
+                        let payload = _.omit(toEncode, ['salt', 'hashed_password']);
+                        payload.userProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
                        /*  var escaped = JSON.stringify(payload);
                         escaped = encodeURI(escaped); */
                         var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
@@ -411,7 +414,6 @@ module.exports = function(MeanUser) {
           if(req.query.hasRole){
             searchObj.roles = {$in :[req.query.hasRole]};
           }
-          console.log('user.searchObj', searchObj, req.query);
           User.find(searchObj).sort('username')
             .populate('userProfile')
             .exec(function(err, users){
@@ -503,7 +505,9 @@ module.exports = function(MeanUser) {
                 user.resetPasswordExpires = undefined;
                 user.save(function(err) {
                     var payload = user && user._doc ? user._doc : user;                             
-                    let cleansedUser = _.omit(payload, ['salt', 'hashed_password', 'userProfile.pointsLog']);
+                    let cleansedUser = _.omit(payload, ['salt', 'hashed_password']);
+                    let cleansedProfile = _.omit(cleansedUser.userProfile, ['pointsLog']);
+                    cleansedUser.userProfile = cleansedProfile;
                  /*    var escaped = JSON.stringify(user);
                         escaped = encodeURI(escaped); */
                     var token = jwt.sign(cleansedUser, config.secret, {expiresIn: config.tokenExpiry});                    
@@ -516,11 +520,11 @@ module.exports = function(MeanUser) {
                         }
                     });
 
-                    req.logIn(user, function(err) {
+                    req.logIn(cleansedUser, function(err) {
                         if (err) return next(err);
                         res.cookie('redirect', destination);
                         return res.send({
-                            user: user,
+                            user: cleansedUser,
                             token: token,
                             redirect: destination
                         });

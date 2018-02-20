@@ -3,7 +3,7 @@
   "mean": "0.6.x",
   "version": "0.1.6",
   "dependencies": {
-    "angular-jwt": "^0.1.5",
+    "angular-jwt": "^0.1.9",
     "meanio-circles": "^0.1.x",
     "nodemailer": "^2.6.4",
     "passport-facebook": "^2.1.1",

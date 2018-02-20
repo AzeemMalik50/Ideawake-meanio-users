@@ -338,9 +338,10 @@ module.exports = function(MeanUser) {
                                         email: user.email
                                     }
                                 });
-                                let cleansedPayload = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+                                let cleansedProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+                                payload.userProfile = cleansedProfile;
                                 // We are sending the payload inside the token
-                                var token = jwt.sign(cleansedPayload, config.secret, {expiresIn: config.tokenExpiry});
+                                var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
                               
                                 return res.json({
                                   token: token,

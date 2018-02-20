@@ -111,6 +111,8 @@ UserProfileSchema.methods.updateDemographicsAndLanguage =
     this.demographics = Object.assign(this.demographics, demographics);
     if (language) {
       this.defaultLanguage = language;
+    } else {
+      this.defaultLanguage = 'en-US';
     }
 
     return this.save();

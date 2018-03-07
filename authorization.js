@@ -104,54 +104,47 @@ exports.generateAuthToken = function(MeanUser) {
 
 /* Generating refresh token MW */
 exports.generateRefreshToken = function(req, res, next) {
-    try {
-      var refreshToken = randtoken.uid(256);
-      refreshTokens[refreshToken] = req.user._id;
-      req.refreshToken = refreshToken;
+  try {
+    let payload = { _id: req.user._id };
+    let refreshToken = jwt.sign(payload, config.secret);
 
-      next();
-    } catch (err) {
-      next(err);
-    }
+    req.refreshToken = refreshToken;
+    next();
+  } catch (err) {
+    next(err);
+  }
 };
 
 /* Valdating refresh token MW */
 exports.validateRefreshToken = function(req, res, next) {
+  req.assert('refreshToken', 'Refresh token is required!').notEmpty();
 
-    req.assert('id', 'User id is required!').notEmpty();
-    req.assert('refreshToken', 'Refresh token is required!');
-    var errors = req.validationErrors();
-    if (errors) {
-        return res.status(400).send(errors);
-    }
+  var errors = req.validationErrors();
+  
+  if (errors) return res.status(400).send(errors);
 
-    try {
-      var id = req.body.id;
-      var refreshToken = req.body.refreshToken;
-      if((refreshToken in refreshTokens) && (refreshTokens[refreshToken] == id)) {
-        findUser(id, function(user) {
-          if (!user) return res.status(401).send('User not found in validateRefreshToken');
-          let cleansedProfile = _.omit(user.userProfile, ['pointsLog']);
-          user.userProfile = cleansedProfile;
-          req.user = user;
-          next();
-        });
-      } else {
-        return res.status(401).send('Unauthorized or bad refresh token!');
-      }
-    } catch (err) {
-      next(err);
-    }
+  try {
+    jwt.verify(req.body.refreshToken, config.secret, (err, decoded) => {
+      if (err) return res.status(401).send('Malformed token.');
+
+      let userId = decoded;
+
+      if (!userId) return res.status(400).send('Malformed token.');
+
+      User.findOneUser({ _id: userId }, true)
+      .then(user => {
+        if (!user) return res.status(401).send('User not found.');
+
+        req.user = user;
+        next();
+      })
+      .catch(err => next(err));
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
-/* Deleting refresh token MW */
-exports.rejectRefreshToken = function(req, res, next) {
-  var refreshToken = req.body.refreshToken 
-  if(refreshToken in refreshTokens) {
-    delete refreshTokens[refreshToken]
-  } 
-  next();
-};
 
 exports.SAMLAuthorization = function(req, res, next) {
   User.findOneUser({email: req.user.upn.toLowerCase()}, true)

@@ -33,8 +33,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
 
   app.route('/api/logout')
   // deleting refresh token
-    .get(MWs.rejectRefreshToken,
-      users.signout);
+    .get(users.signout);
   app.route('/api/users/me')
     .get(users.me)
     .put(hasAuthorization, users.update);

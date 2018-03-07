@@ -81,6 +81,13 @@ var UserProfileSchema = new Schema({
     'commentReplyEmails': {
       type: Boolean,
       default: true
+    },
+    'userDigestEmails': {
+      type: Boolean,
+      default: true
+    },
+    'userDigestLastSent': {
+      type: Date
     }
   },
   deleted: {

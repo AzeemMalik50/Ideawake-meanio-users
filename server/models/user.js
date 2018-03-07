@@ -46,34 +46,28 @@ function unique(modelName, field, caseSensitive) {
 function createUserProfile(user, callback) {
   var UserProfile = mongoose.model('UserProfile');
   
-  UserProfile.find({'user' : user._id}).exec(function(err, results){
-      if(results && results.length > 0) {
-          callback(results[0]);
-      } else {
-          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-          var newUserProfile = new UserProfile();
-          newUserProfile.user = user._id;
-          user.name = (!user.name) ? 'Unknown User' : user.name;
-          newUserProfile.displayName = user.name;
-          newUserProfile.description = user.name;
-          newUserProfile.defaultLanguage = user.defaultLanguage;
-          newUserProfile.profileImage = {};
-          newUserProfile.save(function(err) {
-              if (err) {
-                  console.log(err);
-                  callback(null);
-              } else {
-                  console.log('Created new user profile');
-                  user.userProfile =  newUserProfile._id;
-                  user.save(function(error) {
-                      if(error) {
-                          console.log('Error saving userProfile to User object');
-                      }
-                  });
-                  callback(newUserProfile);
-              }
-          });
-      }
+  UserProfile.find({'user': user._id}).exec(function(err, results) {
+    if (results && results.length > 0) {
+      callback(results[0]._id);
+    } else {
+      console.log('~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~');
+      var newUserProfile = new UserProfile();
+      newUserProfile.user = user._id;
+      user.name = (!user.name) ? 'Unknown User' : user.name;
+      newUserProfile.displayName = user.name;
+      newUserProfile.description = user.name;
+      newUserProfile.defaultLanguage = user.defaultLanguage;
+      newUserProfile.profileImage = {};
+      newUserProfile.save(function(err) {
+        if (err) {
+          console.log(err);
+          callback(null);
+        } else {
+          console.log('Created new user profile');
+          callback(newUserProfile._id);
+        }
+      });
+    }
    });
 }
 
@@ -210,69 +204,45 @@ UserSchema.statics.findOneUser = function(query, resolveIfNotFound) {
   });
 };
 
-UserSchema.statics.createUser = function(userData, done){
+UserSchema.statics.createUser = function(userData, done) {
   var user = new this(userData);
   user.roles ? user.roles : ['authenticated'];
 
   user.save(function(err) {
     if (err) {
-        switch (err.code) {
-            case 11000:
-            case 11001:
-            return done([{
-              msg: 'Email or username already taken',
-              param: 'username'
+      switch (err.code) {
+        case 11000:
+        case 11001:
+          return done([{
+            msg: 'Email or username already taken',
+            param: 'username'
           }]);
-            break;
-            default:
-            var modelErrors = [];
+          break;
+        default:
+          var modelErrors = [];
 
-            if (err.errors) {
-                for (var x in err.errors) {
-                    modelErrors.push({
-                        param: x,
-                        msg: err.errors[x].message,
-                        value: err.errors[x].value
-                    });
-                }
-                return done(modelErrors);
-              //  res.status(400).json(modelErrors);
+          if (err.errors) {
+            for (var x in err.errors) {
+              modelErrors.push({
+                param: x,
+                msg: err.errors[x].message,
+                value: err.errors[x].value
+              });
             }
-        }
-        return done(err);
-      //  return res.status(400);
+            return done(modelErrors);
+          }
+      }
+      return done(err);
     }
 
-    // if(user.userProfile === null) {
-        createUserProfile(user, function(ret) {
-            var payload = user;
-            user.userProfile = ret;
-            return done(null, user);
-          //  payload.redirect = req.body.redirect;
-          //  var escaped = JSON.stringify(payload);
-           // escaped = encodeURI(escaped);
-           /*  req.logIn(user, function(err) {
-                if (err) { return next(err); }
-
-                MeanUser.events.emit('created', {
-                    action: 'created',
-                    user: {
-                        name: req.user.name,
-                        username: user.username,
-                        email: user.email
-                    }
-                });
-
-                // We are sending the payload inside the token
-                var token = jwt.sign(escaped, config.secret);
-                res.json({
-                  token: token,
-                  redirect: config.strategies.landingPage
-                });
-            }); */
-        });
-});
-}
+    createUserProfile(user, function(userProfileId) {
+      user.userProfile = userProfileId;
+      user.save()
+      .catch(err => console.log('error updating user\'s profile id.', err))
+      .finally(() => done(null, user));
+    });
+  });
+};
 
 UserSchema.statics.findAndAuthenticate = function(query, password) {
   return this.findOneUser(query)

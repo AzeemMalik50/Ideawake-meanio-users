@@ -20,14 +20,10 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
         var lcJwt = localStorage.getItem('JWT');
         var rft = localStorage.getItem('rft');
         var user = lcJwt ? jwtHelper.decodeToken(lcJwt) : null;
-        const updateOldToken = user &&  typeof user.userProfile !== 'string';
-        if(
-            lcJwt && rft &&
-            ( jwtHelper.isTokenExpired(lcJwt) || 
-              ( user &&  typeof user.userProfile !== 'string')  
-            )
-          ) {
-
+        if(user &&  typeof user.userProfile !== 'string'){
+          localStorage.removeItem('JWT');
+          return;
+        } else if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){                      
           return $http({
             url: '/api/refreshtoken',
             skipAuthorization: true,
@@ -35,7 +31,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
             data: { refreshToken: rft, id: user._id }
           })
           .then(function(response) {
-              if(response && response.data){
+              if(response && response.data) {
                 localStorage.setItem('JWT', response.data.token);
                 return response.data.token;
               }

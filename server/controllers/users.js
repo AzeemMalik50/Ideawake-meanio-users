@@ -377,20 +377,27 @@ module.exports = function(MeanUser) {
             if (!req.user) return res.send(null);
            // updateLastSeenTime(req.user, function(updatedUser) { // moved to platformsettings
                 createUserProfile(req.user, function(profile) {
-                    let cleansedProfile = _.omit(profile, ['pointsLog']);
-                    if(!req.refreshJWT) {
-                        req.user.userProfile = cleansedProfile;
-                        return res.json(req.user);
-                    } else {
-                        req.user.userProfile = cleansedProfile;
-                        let toEncode = req.user && req.user._doc ? req.user._doc : req.user;
-                        let payload = _.omit(toEncode, ['salt', 'hashed_password']);
-                        payload.userProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
-                       /*  var escaped = JSON.stringify(payload);
-                        escaped = encodeURI(escaped); */
-                        var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
-                        res.json({ token: token });
-                    }
+                    let cleansedProfile = _.omit(profile, ['pointsLog']);                    
+                    req.user.userProfile = cleansedProfile;
+                    return res.json(req.user);
+
+                    //  Follwing was used in case when db has updated but token still has old values. but as for now we are not
+                    //  decoding token on front-end, this is not needed. 
+
+                    // if(!req.refreshJWT) {
+                    //     req.user.userProfile = cleansedProfile;
+                    //     return res.json(req.user);
+                    // } else {        
+
+                    //     req.user.userProfile = cleansedProfile;
+                    //     let toEncode = req.user && req.user._doc ? req.user._doc : req.user;
+                    //     let payload = _.omit(toEncode, ['salt', 'hashed_password']);
+                    //     payload.userProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+                    //    /*  var escaped = JSON.stringify(payload);
+                    //     escaped = encodeURI(escaped); */
+                    //     var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
+                    //     res.json({ token: token });
+                    // }
                 });
            // });
         },
@@ -442,13 +449,16 @@ module.exports = function(MeanUser) {
                     var dbUser = user.toJSON();
                     var id = req.user._id;
 
-                    delete dbUser._id;
-                    delete req.user._id;
+                    //  Follwing was used in case when db has updated but token still has old values. but as for now we are not
+                    //  decoding token on front-end, this is not needed. 
 
-                    var eq = _.isEqual(dbUser, req.user);
-                    if (!eq) {
-                        req.refreshJWT = true;
-                    }
+                    // delete dbUser._id;
+                    // delete req.user._id;                    
+                    
+                    // var eq = _.isEqual(dbUser, req.user);
+                    // if (!eq) {
+                    //     req.refreshJWT = true;
+                    // }
 
                     req.user = user;
                     next();
@@ -484,7 +494,7 @@ module.exports = function(MeanUser) {
                 resetPasswordExpires: {
                     $gt: Date.now()
                 }
-            }).populate('userProfile').exec(function(err, user) {
+            }).exec(function(err, user) {
                 if (err) {
                     return res.status(400).json({
                         msg: err
@@ -507,8 +517,6 @@ module.exports = function(MeanUser) {
                 user.save(function(err) {
                     var payload = user && user._doc ? user._doc : user;                             
                     let cleansedUser = _.omit(payload, ['salt', 'hashed_password']);
-                    let cleansedProfile = _.omit(cleansedUser.userProfile, ['pointsLog']);
-                    cleansedUser.userProfile = cleansedProfile;
                  /*    var escaped = JSON.stringify(user);
                         escaped = encodeURI(escaped); */
                     var token = jwt.sign(cleansedUser, config.secret, {expiresIn: config.tokenExpiry});                    

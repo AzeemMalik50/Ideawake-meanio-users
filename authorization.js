@@ -72,12 +72,11 @@ exports.isMongoId = function(req, res, next) {
 
 exports.generateAuthToken = function(MeanUser) {
   return (req, res, next) => {
-    try {
-      console.log(`generateAuthToken req.user ${req.user} vs req.user._doc ${req.user._doc}`);
-      console.log(`generateAuthToken req.user.userProfile ${req.user.userProfile}`);
-      let payload = _.omit(req.user._doc, ['salt', 'hashed_password']);
-      let cleansedProfile = _.omit(payload.userProfile, ['pointsLog']);
-      payload.userProfile = cleansedProfile;
+    try {      
+      let payload = _.omit(req.user._doc, ['salt', 'hashed_password', 'userProfile']);      
+      let cleansedProfile = _.omit(req.user.userProfile, ['pointsLog']);
+      req.user.userProfile = cleansedProfile;    
+      payload.userProfile = req.user.userProfile._id;
       let escaped, token;
 
       if (MeanUser) {
@@ -88,7 +87,6 @@ exports.generateAuthToken = function(MeanUser) {
           }
         });
       }
-
       (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) &&
       (payload.redirect = req.body.redirect);
 

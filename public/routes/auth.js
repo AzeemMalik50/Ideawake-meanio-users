@@ -19,17 +19,21 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
       if (localStorageTest()) {
         var lcJwt = localStorage.getItem('JWT');
         var rft = localStorage.getItem('rft');
-        if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){
-          var user = jwtHelper.decodeToken(lcJwt);
+        var user = lcJwt ? jwtHelper.decodeToken(lcJwt) : null;
+        if(user &&  typeof user.userProfile !== 'string'){
+          localStorage.removeItem('JWT');
+          return;
+        } else if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){                      
           return $http({
             url: '/api/refreshtoken',
             skipAuthorization: true,
             method: 'POST',
             data: { refreshToken: rft, id: user._id }
-        }).then(function(response) {
-              if(response && response.data){
+          })
+          .then(function(response) {
+              if(response && response.data) {
                 localStorage.setItem('JWT', response.data.token);
-                return response.token;
+                return response.data.token;
               }
             })
             .catch(function(err) {
@@ -37,6 +41,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
               localStorage.removeItem('JWT');
               return;
             });
+
         } else {
           return lcJwt; 
         }

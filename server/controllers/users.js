@@ -494,7 +494,7 @@ module.exports = function(MeanUser) {
                 resetPasswordExpires: {
                     $gt: Date.now()
                 }
-            }).populate('userProfile').exec(function(err, user) {
+            }).exec(function(err, user) {
                 if (err) {
                     return res.status(400).json({
                         msg: err
@@ -517,8 +517,6 @@ module.exports = function(MeanUser) {
                 user.save(function(err) {
                     var payload = user && user._doc ? user._doc : user;                             
                     let cleansedUser = _.omit(payload, ['salt', 'hashed_password']);
-                    let cleansedProfile = _.omit(cleansedUser.userProfile, ['pointsLog']);
-                    cleansedUser.userProfile = cleansedProfile;
                  /*    var escaped = JSON.stringify(user);
                         escaped = encodeURI(escaped); */
                     var token = jwt.sign(cleansedUser, config.secret, {expiresIn: config.tokenExpiry});                    

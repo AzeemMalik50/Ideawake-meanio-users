@@ -345,7 +345,8 @@ module.exports = function(MeanUser) {
                               
                                 return res.json({
                                   token: token,
-                                  redirect:  payload.redirect || config.strategies.landingPage
+                                  redirect:  payload.redirect || config.strategies.landingPage,
+                                  user
                                 });
                             });
                         }

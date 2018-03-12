@@ -68,22 +68,25 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Workaround for Angular 1.6.x
       if (response.data)
         response = response.data;
-        response.token = response.token ?  response.token: localStorage.getItem('JWT')
+        response.token = response.token ?  response.token: localStorage.getItem('JWT')        
       var encodedUser, user, destination;
+      
+      
 
       if (angular.isDefined(response.token)) {
-        localStorage.setItem('JWT', response.token);
-        user = jwtHelper.decodeToken(response.token);
+        localStorage.setItem('JWT', response.token);  
+        //user = jwtHelper.decodeToken(response.token);            
        /*  encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
         user = JSON.parse(encodedUser); */
       }
+
       if (angular.isDefined(response.refreshToken)) {
         localStorage.setItem('rft', response.refreshToken);
       }
 
       destination = angular.isDefined(response.redirect) ? response.redirect : destination;
 
-      this.user = user || response;
+      this.user = response.user || response;
       this.loggedin = true;
       this.loginError = 0;
       this.registerError = 0;

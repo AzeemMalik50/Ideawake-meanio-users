@@ -19,33 +19,38 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
       if (localStorageTest()) {
         var lcJwt = localStorage.getItem('JWT');
         var rft = localStorage.getItem('rft');
-        if (lcJwt) {
-          var user;
-          try {
-            user = jwtHelper.decodeToken(lcJwt);
-          } catch (err) {
-            console.log('tokens', lcJwt, rft);
-            console.error(err);
-            localStorage.removeItem('JWT');
-            localStorage.removeItem('rft');
-            return;
-          }
+        var user;
+        try {
+          user = lcJwt ? jwtHelper.decodeToken(lcJwt) : null;
+        } catch (err) {
+          console.log('tokens', lcJwt, rft);
+          console.error(err);
+          localStorage.removeItem('JWT');
+          localStorage.removeItem('rft');
+          return;
+        }
+        if(user && typeof user.userProfile !== 'string'){
+          localStorage.removeItem('JWT');
+          return;
+        } else if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){
           return $http({
             url: '/api/refreshtoken',
             skipAuthorization: true,
             method: 'POST',
             data: { refreshToken: rft, id: user._id }
-          }).then(function (response) {
-            if (response && response.data) {
-              localStorage.setItem('JWT', response.data.token);
-              return response.token;
-            }
           })
-            .catch(function (err) {
+          .then(function(response) {
+              if(response && response.data) {
+                localStorage.setItem('JWT', response.data.token);
+                return response.data.token;
+              }
+            })
+            .catch(function(err) {
               console.log(err);
               localStorage.removeItem('JWT');
               return;
             });
+
         } else {
           return lcJwt;
         }

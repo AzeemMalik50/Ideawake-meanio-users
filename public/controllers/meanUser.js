@@ -18,11 +18,12 @@ angular.module('mean.users')
     }
   ])
 
-  .controller('LoginCtrl', ['$rootScope', 'MeanUser', '$location', '$http',
-    function ($rootScope, MeanUser, $location, $http) {
+  .controller('LoginCtrl', ['$rootScope', 'MeanUser', '$location', '$http', '$timeout',
+    function ($rootScope, MeanUser, $location, $http, $timeout) {
 
       var vm = this;
       vm.user = {};
+      vm.showError = false;
       var query = $location.search();
 
       vm.input = {
@@ -40,8 +41,10 @@ angular.module('mean.users')
         vm.input.tooltipText = vm.input.tooltipText === 'Show password' ? 'Hide password' : 'Show password';
       };
 
-      $rootScope.$on('loginfailed', function () {
+      $rootScope.$on('loginfailed', function () {        
+        vm.showError = true;
         vm.loginError = MeanUser.loginError;
+        $timeout(() => vm.showError = false, 1500);
       });
 
       // Register the login() function

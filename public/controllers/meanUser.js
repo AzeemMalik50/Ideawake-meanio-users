@@ -145,7 +145,7 @@ angular.module('mean.users')
         // check that if user has got any parameter named n then it mean it is a new user
         // and need to complete profile
         localStorage.setItem('JWT', vm.params.t);
-        $cookies.put('redirect', "/complete-profile");
+        // $cookies.put('redirect', "/complete-profile");
         MeanUser.loginSaml(vm.token);
       } else if (vm.params.t) {
         localStorage.setItem('JWT', vm.params.t);

@@ -15,6 +15,12 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
       }
     }
 
+    function clearTokensAndRedirectToLogin() {
+      localStorage.removeItem('JWT');
+      localStorage.removeItem('rft');
+      $location.url('/auth/login');
+    }
+
     jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', '$http', 'jwtHelper', function ($cookies, $location, $http, jwtHelper) {
       if (localStorageTest()) {
         var lcJwt = localStorage.getItem('JWT');
@@ -23,14 +29,13 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
         try {
           user = lcJwt ? jwtHelper.decodeToken(lcJwt) : null;
         } catch (err) {
-          console.log('tokens', lcJwt, rft);
+          console.log('bad token, logging user out', lcJwt, rft);
           console.error(err);
-          localStorage.removeItem('JWT');
-          localStorage.removeItem('rft');
+          clearTokensAndRedirectToLogin();
           return;
         }
         if(user && typeof user.userProfile !== 'string'){
-          localStorage.removeItem('JWT');
+          clearTokensAndRedirectToLogin();
           return;
         } else if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){
           return $http({
@@ -47,7 +52,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
             })
             .catch(function(err) {
               console.log(err);
-              localStorage.removeItem('JWT');
+              clearTokensAndRedirectToLogin();
               return;
             });
 

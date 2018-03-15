@@ -417,12 +417,18 @@ module.exports = function(MeanUser) {
                 user.resetPasswordToken = undefined;
                 user.resetPasswordExpires = undefined;
                 user.save(function(err) {
-                    var payload = user && user._doc ? user._doc : user;                             
-                    let cleansedUser = _.omit(payload, ['salt', 'hashed_password']);
-                 /*    var escaped = JSON.stringify(user);
-                        escaped = encodeURI(escaped); */
-                    var token = jwt.sign(cleansedUser, config.secret, {expiresIn: config.tokenExpiry});                    
-                    var destination = req.redirect || config.strategies.landingPage;
+                    let payload = _.omit(user.toObject(), [
+                        'salt',
+                        'hashed_password'
+                    ]);
+                    let cleansedProfile = _.omit(payload.userProfile, ['pointsLog']);
+                    payload.userProfile = cleansedProfile;
+
+                    req.body.hasOwnProperty('redirect') && req.body.redirect !== false && (payload.redirect = req.body.redirect);
+
+                    req.token = jwt.sign(payload, config.secret, {
+                        expiresIn: config.tokenExpiry
+                    });
 
                     MeanUser.events.emit('reset_password', {
                         action: 'reset_password',
@@ -431,13 +437,13 @@ module.exports = function(MeanUser) {
                         }
                     });
 
-                    req.logIn(cleansedUser, function(err) {
+                    req.logIn(payload, function(err) {
                         if (err) return next(err);
-                        res.cookie('redirect', destination);
+                        res.cookie('redirect', payload.redirect);
                         return res.send({
-                            user: cleansedUser,
-                            token: token,
-                            redirect: destination
+                          user: payload,
+                          token: req.token,
+                          redirect: payload.redirect
                         });
                     });
                 });

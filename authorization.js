@@ -72,11 +72,17 @@ exports.isMongoId = function(req, res, next) {
 
 exports.generateAuthToken = function(MeanUser) {
   return (req, res, next) => {
-    try {      
-      let payload = _.omit(req.user._doc, ['salt', 'hashed_password', 'userProfile']);      
-      let cleansedProfile = _.omit(req.user.userProfile, ['pointsLog']);
-      req.user.userProfile = cleansedProfile;    
-      payload.userProfile = req.user.userProfile._id;
+    try {
+      console.log(`generateAuthToken req.user ${req.user} vs req.user._doc ${req.user._doc}`);
+      console.log(`generateAuthToken req.user.userProfile ${req.user.userProfile}`);
+
+      // Using user.toObject() here otherwise removing stuff like 'pointsLog'
+      // from the object still leaves it under user.userProfile._doc.pointsLog
+      // and it ends up getting encoded as the token. toObject() is a more formal
+      // way of getting the plain javascript object compared to user._doc.
+      let payload = _.omit(req.user.toObject(), ['salt', 'hashed_password']);
+      let cleansedProfile = _.omit(payload.userProfile, ['pointsLog']);
+      payload.userProfile = cleansedProfile;
       let escaped, token;
 
       if (MeanUser) {
@@ -87,11 +93,9 @@ exports.generateAuthToken = function(MeanUser) {
           }
         });
       }
+
       (req.body.hasOwnProperty('redirect') && req.body.redirect !== false) &&
       (payload.redirect = req.body.redirect);
-
-    /*   escaped = JSON.stringify(payload);
-      escaped = encodeURI(escaped); */
 
       req.token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
 

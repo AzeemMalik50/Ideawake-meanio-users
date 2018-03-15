@@ -210,12 +210,9 @@ module.exports = function(MeanUser) {
             var platformSettings = {};
 
             collection.find().toArray(function(err, result) {
-                // here ...
-                //  console.log(platformSettings);
-                if(result && result.length > 0) {
-                    // console.log(result[0]);
+                if (result && result.length > 0) {
                     platformSettings = result[0];
-                    if(platformSettings.inviteOnlyMode === true && req.body.inviteId === null) {
+                    if (platformSettings.inviteOnlyMode === true && req.body.inviteId === null) {
                         console.log('BAILING OUT!!!!!');
                         return res.status(400);
                     }
@@ -232,125 +229,29 @@ module.exports = function(MeanUser) {
                     if (errors) {
                         return res.status(400).send(errors);
                     }
-                 
-                  /*   user.save(function(err) {
+
+                    User.createUser(req.body, function(err, user) {
                         if (err) {
-                            switch (err.code) {
-                                case 11000:
-                                case 11001:
-                                res.status(400).json([{
-                                    msg: 'Email or username already taken',
-                                    param: 'username'
-                                }]);
-                                break;
-                                default:
-                                var modelErrors = [];
-
-                                if (err.errors) {
-                                    for (var x in err.errors) {
-                                        modelErrors.push({
-                                            param: x,
-                                            msg: err.errors[x].message,
-                                            value: err.errors[x].value
-                                        });
-                                    }
-
-                                    res.status(400).json(modelErrors);
-                                }
-                            }
-                            return res.status(400);
-                        }
-
-                        // if(user.userProfile === null) {
-                            createUserProfile(user, function(ret) {
-                                var payload = user;
-                                user.userProfile = ret;
-                                payload.redirect = req.body.redirect;
-                                var escaped = JSON.stringify(payload);
-                                escaped = encodeURI(escaped);
-                                req.logIn(user, function(err) {
-                                    if (err) { return next(err); }
-
-                                    MeanUser.events.emit('created', {
-                                        action: 'created',
-                                        user: {
-                                            name: req.user.name,
-                                            username: user.username,
-                                            email: user.email
-                                        }
-                                    });
-
-                                    // We are sending the payload inside the token
-                                    var token = jwt.sign(escaped, config.secret);
-                                    res.json({
-                                      token: token,
-                                      redirect: config.strategies.landingPage
-                                    });
-                                });
-                            });
-                        // } else {
-                        //     var payload = user;
-                        //     payload.redirect = req.body.redirect;
-                        //     var escaped = JSON.stringify(payload);
-                        //     escaped = encodeURI(escaped);
-                        //     req.logIn(user, function(err) {
-                        //         if (err) { return next(err); }
-
-                        //         MeanUser.events.emit('created', {
-                        //             action: 'created',
-                        //             user: {
-                        //                 name: req.user.name,
-                        //                 username: user.username,
-                        //                 email: user.email
-                        //             }
-                        //         });
-
-                        //         // We are sending the payload inside the token
-                        //         var token = jwt.sign(escaped, config.secret);
-                        //         res.json({
-                        //           token: token,
-                        //           redirect: config.strategies.landingPage
-                        //         });
-                        //     });
-                        //     res.status(200);
-                        // }
-                    });
-
- */
-                    User.createUser(req.body, function(err, user){
-                        if(err){
                             return res.status(400).json(err);
-                        }else{
-                            var payload = user._doc;
-                            if (req.body && req.body.redirect) {
-                                payload.redirect = req.body.redirect
-                            }
-                         //   var escaped = JSON.stringify(payload);
-                          //  escaped = encodeURI(escaped);
-                            req.logIn(user, function(err) {
-                                if (err) { return next(err); }
-    
-                                MeanUser.events.emit('created', {
-                                    action: 'created',
-                                    user: {
-                                        name: req.user.name,
-                                        username: user.username,
-                                        email: user.email
-                                    }
-                                });
-                                let cleansedProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
-                                payload.userProfile = cleansedProfile;
-                                // We are sending the payload inside the token
-                                var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
-                              
-                                return res.json({
-                                  token: token,
-                                  redirect:  payload.redirect || config.strategies.landingPage,
-                                  user
-                                });
+                        } else {
+                            req.user = user;
+
+                            MeanUser.events.emit('created', {
+                                action: 'created',
+                                user: {
+                                    name: user.name,
+                                    username: user.username,
+                                    email: user.email
+                                }
                             });
+
+                            if (req.body && req.body.redirect) {
+                                req.redirect = req.body.redirect
+                            }
+
+                            next();
                         }
-                    }) 
+                    });
                 }
             });
         },
@@ -606,4 +507,3 @@ module.exports = function(MeanUser) {
         }
     };
 }
-

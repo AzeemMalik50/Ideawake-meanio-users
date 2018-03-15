@@ -34,10 +34,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
           clearTokensAndRedirectToLogin($location);
           return;
         }
-        if(user && typeof user.userProfile !== 'string'){
-          clearTokensAndRedirectToLogin($location);
-          return;
-        } else if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){
+        if(lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)){
           return $http({
             url: '/api/refreshtoken',
             skipAuthorization: true,

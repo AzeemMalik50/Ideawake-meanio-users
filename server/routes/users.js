@@ -88,7 +88,19 @@ module.exports = function (MeanUser, app, circles, database, passport) {
   if (config.strategies.local.enabled) {
     // Setting up the users api
     app.route('/api/register')
-      .post(users.create);
+      .post(
+        users.create,
+        authTokenMW(MeanUser),
+        MWs.generateRefreshToken,
+        function (req, res) {
+          res.json({
+            token: req.token,
+            user: req.user,
+            refreshToken : req.refreshToken,
+            redirect: req.redirect || config.strategies.landingPage
+          });
+        }
+      );
 
     app.route('/api/forgot-password')
       .post(users.forgotpassword);

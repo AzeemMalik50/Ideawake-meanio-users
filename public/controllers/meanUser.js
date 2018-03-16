@@ -44,7 +44,9 @@ angular.module('mean.users')
       $rootScope.$on('loginfailed', function () {        
         vm.showError = true;
         vm.loginError = MeanUser.loginError;
-        $timeout(() => vm.showError = false, 1500);
+        $timeout(function(){
+          vm.showError = false;
+        }, 1500);
       });
 
       // Register the login() function

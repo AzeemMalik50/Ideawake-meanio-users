@@ -162,7 +162,8 @@ exports.SAMLAuthorization = function(req, res, next) {
             email: req.user.upn,
             name: req.user.name,
             adfs_metadata: req.user,
-            roles: invite.roles
+            // Added default roles in case no invite found
+            roles:  invite && invite.roles ? invite.roles : ['authenticated']
           };
           req.isUserNew = true;
           return User.createUser(newUser, function(err, user){

@@ -79,10 +79,10 @@ exports.generateAuthToken = function(MeanUser) {
       // Using user.toObject() here otherwise removing stuff like 'pointsLog'
       // from the object still leaves it under user.userProfile._doc.pointsLog
       // and it ends up getting encoded as the token. toObject() is a more formal
-      // way of getting the plain javascript object compared to user._doc.
-      let payload = _.omit(req.user.toObject(), ['salt', 'hashed_password']);
-      let cleansedProfile = _.omit(payload.userProfile, ['pointsLog']);
-      payload.userProfile = cleansedProfile;
+      // way of getting the plain javascript object compared to user._doc.            
+      // omitting userProfile as we no longer send userProfile in token.
+      let payload = _.omit(req.user.toObject(), ['salt', 'hashed_password', 'userProfile']);
+      payload.userProfile = req.user.userProfile._id;
       let escaped, token;
 
       if (MeanUser) {

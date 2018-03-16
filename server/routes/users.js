@@ -93,6 +93,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
         authTokenMW(MeanUser),
         MWs.generateRefreshToken,
         function (req, res) {
+          console.log(req.user, 'req.user');
           res.json({
             token: req.token,
             user: req.user,
@@ -107,7 +108,19 @@ module.exports = function (MeanUser, app, circles, database, passport) {
 
     app.route('/api/reset/:token')
       .get(users.checkResetToken)
-      .post(users.resetpassword);
+      .post(
+        users.resetpassword,
+        authTokenMW(MeanUser),
+        MWs.generateRefreshToken,
+        function (req, res) {
+          res.json({
+            token: req.token,
+            user: req.user,
+            refreshToken : req.refreshToken,
+            redirect: req.redirect || config.strategies.landingPage
+          });
+        }
+      );
 
     // Setting the local strategy route
     app.route('/api/login')

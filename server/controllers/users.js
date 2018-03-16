@@ -396,7 +396,9 @@ module.exports = function(MeanUser) {
                 resetPasswordExpires: {
                     $gt: Date.now()
                 }
-            }).exec(function(err, user) {
+            })
+            .populate('userProfile')
+            .exec(function(err, user) {
                 if (err) {
                     return res.status(400).json({
                         msg: err
@@ -415,36 +417,27 @@ module.exports = function(MeanUser) {
                 }
                 user.password = req.body.password;
                 user.resetPasswordToken = undefined;
-                user.resetPasswordExpires = undefined;
+                user.resetPasswordExpires = undefined;                                
                 user.save(function(err) {
-                    let payload = _.omit(user.toObject(), [
+                    let userCleansed = _.omit(user.toObject(), [
                         'salt',
                         'hashed_password'
-                    ]);
-                    let cleansedProfile = _.omit(payload.userProfile, ['pointsLog']);
-                    payload.userProfile = cleansedProfile;
+                    ]);                                        
 
-                    req.body.hasOwnProperty('redirect') && req.body.redirect !== false && (payload.redirect = req.body.redirect);
-
-                    req.token = jwt.sign(payload, config.secret, {
-                        expiresIn: config.tokenExpiry
-                    });
+                    req.redirect = req.body.hasOwnProperty('redirect') 
+                                    && req.body.redirect !== false 
+                                    && (payload.redirect = req.body.redirect);
 
                     MeanUser.events.emit('reset_password', {
                         action: 'reset_password',
                         user: {
                             name: user.name
                         }
-                    });
-
-                    req.logIn(payload, function(err) {
+                    });                    
+                    req.logIn(userCleansed, function(err) {
                         if (err) return next(err);
-                        res.cookie('redirect', payload.redirect);
-                        return res.send({
-                          user: payload,
-                          token: req.token,
-                          redirect: payload.redirect
-                        });
+                        req.user = user;                        
+                        next();
                     });
                 });
             });

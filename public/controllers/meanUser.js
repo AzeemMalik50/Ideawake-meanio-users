@@ -43,15 +43,12 @@ angular.module('mean.users')
 
       $rootScope.$on('loginfailed', function () {        
         vm.showError = true;
-        vm.loginError = MeanUser.loginError;
-        $timeout(function(){
-          vm.showError = false;
-        }, 1500);
+        vm.loginError = MeanUser.loginError;        
       });
 
       // Register the login() function
-      vm.login = function () {
-
+      vm.login = function () {        
+        vm.showError = false;
         if (query.redirect) {
           this.user.redirect = query.redirect;
         } else {

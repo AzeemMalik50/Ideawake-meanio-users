@@ -64,7 +64,7 @@ function createUserProfile(user, callback) {
           callback(null);
         } else {
           console.log('Created new user profile');
-          callback(newUserProfile._id);
+          callback(newUserProfile);
         }
       });
     }
@@ -235,11 +235,14 @@ UserSchema.statics.createUser = function(userData, done) {
       return done(err);
     }
 
-    createUserProfile(user, function(userProfileId) {
-      user.userProfile = userProfileId;
+    createUserProfile(user, function(userProfile) {
+      user.userProfile = userProfile._id;
       user.save()
       .catch(err => console.log('error updating user\'s profile id.', err))
-      .finally(() => done(null, user));
+      .finally(() => {
+        user.userProfile = userProfile;
+        done(null, user)
+      });
     });
   });
 };

@@ -1,6 +1,7 @@
 'use strict';
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
+  UserProfile = mongoose.model('UserProfile'),
   randtoken = require('rand-token'),
   _ = require('lodash'),
   refreshTokens = {};
@@ -85,7 +86,10 @@ exports.generateAuthToken = function(MeanUser) {
       if (req.user && req.user.userProfile && req.user.userProfile._id) {
         payload.userProfile = req.user.userProfile._id;
       } else {
-        payload.userProfile = null;
+        function setProfile(profile) {
+          payload.userProfile = profile;
+        }
+        createUserProfile(MeanUser, setProfile);
       }
 
       if (MeanUser) {
@@ -107,6 +111,39 @@ exports.generateAuthToken = function(MeanUser) {
       next(err);
     }
   }
+};
+
+function createUserProfile(MeanUser, callback) {
+  UserProfile.find({ 'user': user._id }).exec(function (err, results) {
+    if (results && results.length > 0) {
+      callback(results[0]);
+    } else {
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+      var newUserProfile = new UserProfile();
+      newUserProfile.user = user._id;
+      user.name = (!user.name) ? 'Unknown User' : user.name;
+      newUserProfile.displayName = user.name;
+      newUserProfile.description = user.name;
+      newUserProfile.defaultLanguage = user.defaultLanguage || 'en-US';
+      newUserProfile.profileImage = {};
+      newUserProfile.save(function (err) {
+        if (err) {
+          console.log(err);
+          return;
+        } else {
+          console.log('Created new user profile');
+          user.userProfile = newUserProfile._id;
+          user.save(function (error) {
+            if (error) {
+              console.log('Error saving userProfile to User object');
+            }
+          });
+          callback(newUserProfile._id);
+        }
+      });
+    }
+  });
+
 };
 
 /* Generating refresh token MW */

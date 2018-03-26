@@ -82,8 +82,11 @@ exports.generateAuthToken = function(MeanUser) {
       // way of getting the plain javascript object compared to user._doc.            
       // omitting userProfile as we no longer send userProfile in token.
       let payload = _.omit(req.user.toObject(), ['salt', 'hashed_password', 'userProfile']);
-      payload.userProfile = req.user.userProfile._id;
-      let escaped, token;
+      if (req.user && req.user.userProfile && req.user.userProfile._id) {
+        payload.userProfile = req.user.userProfile._id;
+      } else {
+        payload.userProfile = null;
+      }
 
       if (MeanUser) {
         MeanUser.events.emit('logged_in', {

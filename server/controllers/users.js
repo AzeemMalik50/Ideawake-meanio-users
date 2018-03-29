@@ -336,15 +336,12 @@ module.exports = function(MeanUser) {
             });
         },
         search: function(req,res) {
-          var searchObj = {};
-          if(req.query.hasRole){
-            searchObj.roles = {$in :[req.query.hasRole]};
-          }
-          User.find(searchObj).sort('username')
-            .populate('userProfile')
-            .exec(function(err, users){
-                res.send(users);
-          });
+          const searchObj = {};
+          User.find(searchObj)
+						.sort('name')            
+						.exec()
+						.then(users => res.json({ users }))
+						.catch(err => console.log(`Error: ${err}`));
         },
         /**
        * Loads a user into the request

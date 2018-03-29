@@ -320,9 +320,9 @@ module.exports = function(MeanUser) {
             });
         },
         search: function(req,res) {
-					const pageNum = req.query.pageNum || 0;
+					const pageNum = req.query.pageNum || 1;
 					const limit = (req.query.limit) ? parseInt(req.query.limit) : 10;
-					const skip = (limit * pageNum);
+					const skip = (pageNum - 1) * limit;
 					const filters = {};
 					
 					if (req.query.searchText) {

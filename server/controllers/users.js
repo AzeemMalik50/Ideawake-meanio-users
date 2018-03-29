@@ -350,7 +350,8 @@ module.exports = function(MeanUser) {
 					}
 
 					User.find(filters)
-						.lean()
+            .lean()
+            .select("username name email")
 						.sort('name')
 						.skip(skip)
 						.limit(limit)

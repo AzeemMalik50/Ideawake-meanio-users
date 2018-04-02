@@ -334,7 +334,7 @@ module.exports = function(MeanUser) {
 						];
 					}			
 					if (exclude.length) {
-						filter["_id"] = {
+						filters["_id"] = {
 							"$nin": exclude
 						};
 					}

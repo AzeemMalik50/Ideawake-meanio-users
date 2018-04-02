@@ -320,10 +320,10 @@ module.exports = function(MeanUser) {
             });
         },
         search: function(req,res) {
-					const pageNum = req.query.pageNum || 1;
-					const limit = (req.query.limit) ? parseInt(req.query.limit) : 10;
+					const pageNum = req.body.pageNum || 1;
+					const limit = (req.body.limit) ? parseInt(req.body.limit) : 10;
 					const skip = (pageNum - 1) * limit;
-					const exclude = req.query.exclude || [];
+					const exclude = req.body.exclude || [];
 					const filters = {};
 					
 					if (req.query.searchText) {
@@ -332,8 +332,7 @@ module.exports = function(MeanUser) {
               { name: regex },
               { email: regex }
 						];
-					}
-								
+					}			
 					if (exclude.length) {
 						filter["_id"] = {
 							"$nin": exclude

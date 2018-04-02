@@ -244,5 +244,5 @@ module.exports = function (MeanUser, app, circles, database, passport) {
       }), users.authCallback);
   }
 
-  app.get('/api/users/search', users.search);
+  app.post('/api/users/search', users.search);
 };

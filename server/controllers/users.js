@@ -341,14 +341,16 @@ module.exports = function(MeanUser) {
 					const skip = (pageNum - 1) * limit;
 					const exclude = req.body.exclude || [];
 					const filters = {};
+					const searchText = req.body.searchText || "";
 					
-					if (req.query.searchText) {
-            const regex = new RegExp(req.query.searchText,"gi");
+					if (searchText) {
+            const regex = new RegExp(searchText,"gi");
 						filters['$or'] = [
               { name: regex },
               { email: regex }
 						];
-					}			
+					}		      
+					
 					if (exclude.length) {
 						filters["_id"] = {
 							"$nin": exclude

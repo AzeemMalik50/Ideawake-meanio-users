@@ -323,6 +323,7 @@ module.exports = function(MeanUser) {
 					const pageNum = req.query.pageNum || 1;
 					const limit = (req.query.limit) ? parseInt(req.query.limit) : 10;
 					const skip = (pageNum - 1) * limit;
+					const exclude = req.query.exclude || [];
 					const filters = {};
 					
 					if (req.query.searchText) {
@@ -331,6 +332,12 @@ module.exports = function(MeanUser) {
               { name: regex },
               { email: regex }
 						];
+					}
+								
+					if (exclude.length) {
+						filter["_id"] = {
+							"$nin": exclude
+						};
 					}
 
 					User.find(filters)

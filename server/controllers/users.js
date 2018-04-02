@@ -351,11 +351,11 @@ module.exports = function(MeanUser) {
 						];
 					}		      
 					
-					if (exclude.length) {
-						filters["_id"] = {
-							"$nin": exclude
-						};
-					}
+					//exclude current loggedIn user as well the user sent from front-end
+          exclude.push(req.user._id);           
+          filters["_id"] = {
+            "$nin": exclude
+          };					
 
 					User.find(filters)
             .lean()

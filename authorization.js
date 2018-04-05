@@ -23,7 +23,7 @@ const config = require('meanio').getConfig();
  * Generic require login routing middleware
  */
 exports.requiresLoginCheckDb = function(req, res, next) {
-  //console.log(".................................Checking auth.requiresLogin.................................");
+  //console.log('.................................Checking auth.requiresLogin.................................');
 
   if (!req.isAuthenticated()) {
     return res.status(403).send('User is not authorized');
@@ -152,18 +152,25 @@ exports.validateRefreshToken = function(req, res, next) {
 
 exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
-  User.findOneUser({email: req.user.upn.toLowerCase()}, true)
+  if (req.user.email) {
+    let query = { 'adfs_metadata.emailaddress': req.user.email.toLowerCase(), $or: [{ 'email': req.user.email.toLowerCase() }] };
+    let email = req.user.email.toLowerCase();
+  } else {
+    let query = { 'adfs_metadata.emailaddress': req.user.upn.toLowerCase(), $or: [{ 'email': req.user.upn.toLowerCase() }] };
+    let email = req.user.upn.toLowerCase();
+  }
+  User.findOneUser(query, true)
   .then(user => {
     if (!user) {
-      Invite.findOneAndUpdate({ status: 'pending', email: req.user.upn.toLowerCase() }, { status: 'accepted' })
+      Invite.findOneAndUpdate({ status: 'pending', email: email }, { status: 'accepted' })
         .then(invite => {
           console.log(invite)
           var newUser = {
-            email: req.user.upn,
+            email: email,
             name: req.user.name,
             adfs_metadata: req.user,
             // Added default roles in case no invite found
-            roles:  invite && invite.roles ? invite.roles : ['authenticated']
+            roles: invite && invite.roles ? invite.roles : ['authenticated']
           };
           req.isUserNew = true;
           return User.createUser(newUser, function(err, user){

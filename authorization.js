@@ -152,42 +152,39 @@ exports.validateRefreshToken = function(req, res, next) {
 
 exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
-  if (req.user.email) {
-    let query = { 'adfs_metadata.emailaddress': req.user.email.toLowerCase(), $or: [{ 'email': req.user.email.toLowerCase() }] };
-    let email = req.user.email.toLowerCase();
-  } else {
-    let query = { 'adfs_metadata.emailaddress': req.user.upn.toLowerCase(), $or: [{ 'email': req.user.upn.toLowerCase() }] };
-    let email = req.user.upn.toLowerCase();
-  }
-  User.findOneUser(query, true)
-  .then(user => {
-    if (!user) {
-      Invite.findOneAndUpdate({ status: 'pending', email: email }, { status: 'accepted' })
-        .then(invite => {
-          console.log(invite)
-          var newUser = {
-            email: email,
-            name: req.user.name,
-            adfs_metadata: req.user,
-            // Added default roles in case no invite found
-            roles: invite && invite.roles ? invite.roles : ['authenticated']
-          };
-          req.isUserNew = true;
-          return User.createUser(newUser, function(err, user){
-            if (err) {
-               throw err;
-            } else {
-              req.user = user;
-              next();
-            }
-          });
-        })
-    } else {
-      req.user = user;    
-      next()
-    }
-  }).catch(err => {
-    console.log('Error creating user on SSO', err);
-    next(err);
-  });
+  let email = (
+    req.user.emailaddress || req.user.email || req.user.upn
+  ).toLowerCase();
+
+  User.findOneUser({ email }, true)
+    .then(user => {
+      if (!user) {
+        Invite.findOneAndUpdate({ status: 'pending', email: email }, { status: 'accepted' })
+          .then(invite => {
+            console.log(invite)
+            var newUser = {
+              email: email,
+              name: req.user.name,
+              adfs_metadata: req.user,
+              // Added default roles in case no invite found
+              roles: invite && invite.roles ? invite.roles : ['authenticated']
+            };
+            req.isUserNew = true;
+            return User.createUser(newUser, function(err, user){
+              if (err) {
+                throw err;
+              } else {
+                req.user = user;
+                next();
+              }
+            });
+          })
+      } else {
+        req.user = user;    
+        next();
+      }
+    }).catch(err => {
+      console.log('Error creating user on SSO', err);
+      next(err);
+    });
 };

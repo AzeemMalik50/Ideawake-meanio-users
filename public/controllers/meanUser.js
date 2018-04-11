@@ -129,8 +129,8 @@ angular.module('mean.users')
         vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
       });
     }
-  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies', '$http', 'jwtHelper',
-    function (MeanUser, $rootScope, $sce, $location, $cookies, $http, jwtHelper) {
+  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies', '$http',
+    function (MeanUser, $rootScope, $sce, $location, $cookies, $http) {
       var vm = this;
       vm.user = {};
       vm.message = 'Verifying your request please wait...';
@@ -148,20 +148,17 @@ angular.module('mean.users')
         // and need to complete profile
 
         // Get platform settings and see if useUserSecondaryEmail is true
-
         // then redirect user to profile page. 
-        localStorage.setItem('JWT', vm.params.t);
-       
+        localStorage.setItem('JWT', vm.params.t);      
         $http({
           url: '/api/platformsettings' ,
           method: 'get'
         })
         .then(function(result) {
           const settings = result.data;
-          if (settings.useUserSecondaryEmail) {
-            // had to get id from token instead.
-            const userToken = jwtHelper.decodeToken(vm.params.t);                        
-            $cookies.put('redirect', `/user/${userToken._id}/edit`); 
+          if (settings.useUserSecondaryEmail) {                
+            MeanUser.firstLogin = true;        
+            $cookies.put('redirect', `editProfile`); 
           }
           MeanUser.loginSaml(vm.token);
         })

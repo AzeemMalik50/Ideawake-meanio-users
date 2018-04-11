@@ -47,6 +47,8 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       this.registerError = null;
       this.resetpassworderror = null;
       this.validationError = null;
+      this.firstLogin = false;      
+
       self = this;
       $http.get('/api/users/me').then(function(response) {
         if(!response.data && $cookies.get('token') && $cookies.get('redirect')) {
@@ -109,6 +111,12 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         Global.authenticate(userObj);
         if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
           var redirect = $cookies.get('redirect');
+
+          // In case user is first time logging in and redirect is set to edit Profile.         
+          if (self.firstLogin && redirect === 'editProfile') {
+            redirect = `/user/${userObj._id}/edit`;
+          }
+
           $cookies.remove('redirect');
           $location.url(redirect);
         } else if (destination) {

@@ -129,8 +129,8 @@ angular.module('mean.users')
         vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
       });
     }
-  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies',
-    function (MeanUser, $rootScope, $sce, $location, $cookies) {
+  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies', '$http', 'jwtHelper',
+    function (MeanUser, $rootScope, $sce, $location, $cookies, $http, jwtHelper) {
       var vm = this;
       vm.user = {};
       vm.message = 'Verifying your request please wait...';
@@ -142,13 +142,33 @@ angular.module('mean.users')
         vm.errorMessage = $sce.trustAsHtml('This link is not valid. Please go to the <a href="/">home</a> page.');
         $rootScope.loading = false;
       });
-      /* service to verify saml token */
-      if (vm.params.n == true) {
+      /* service to verify saml token */      
+      if (vm.params.n === "true") {
         // check that if user has got any parameter named n then it mean it is a new user
         // and need to complete profile
+
+        // Get platform settings and see if useUserSecondaryEmail is true
+
+        // then redirect user to profile page. 
         localStorage.setItem('JWT', vm.params.t);
-        // $cookies.put('redirect', "/complete-profile");
-        MeanUser.loginSaml(vm.token);
+       
+        $http({
+          url: '/api/platformsettings' ,
+          method: 'get'
+        })
+        .then(function(result) {
+          const settings = result.data;
+          if (settings.useUserSecondaryEmail) {
+            // had to get id from token instead.
+            const userToken = jwtHelper.decodeToken(vm.params.t);                        
+            $cookies.put('redirect', `/user/${userToken._id}/edit`); 
+          }
+          MeanUser.loginSaml(vm.token);
+        })
+        .catch(err => {
+          MeanUser.loginSaml(vm.token);
+          console.error(`An error occured while getting platform settings: ${err}` );
+        });                      
       } else if (vm.params.t) {
         localStorage.setItem('JWT', vm.params.t);
         MeanUser.loginSaml(vm.token);

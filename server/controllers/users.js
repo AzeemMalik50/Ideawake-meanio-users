@@ -223,12 +223,28 @@ module.exports = function(MeanUser) {
                     req.assert('email', 'You must enter a valid email address').isEmail();
                     req.assert('password', 'Password must be between 6-100 characters long').len(6, 100);
                     // req.assert('username', 'Username cannot be more than 20 characters').len(1, 20);
-                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
+                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);                    
+
 
                     var errors = req.validationErrors();
+                    
+                    const platFormEmailDomains = platformSettings.emailDomains;
+                    if (platFormEmailDomains && platFormEmailDomains.length) {
+                        const emailDomain = req.body.email.split('@').pop();
+                        if (platFormEmailDomains.indexOf(emailDomain) === -1) {
+                            errors = errors || [];
+                            errors.push({
+                              param: 'email',
+                              msg: 'Email not allowed',
+                              value: req.body.email
+                          });
+                        }
+                    }
+
                     if (errors) {
                         return res.status(400).send(errors);
                     }
+
 
                     User.createUser(req.body, function(err, user) {
                         if (err) {

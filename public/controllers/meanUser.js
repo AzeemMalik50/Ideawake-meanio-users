@@ -104,9 +104,9 @@ angular.module('mean.users')
 
       function validate() {        
         let isValid = true;
-        if (vm.emailDomains && vm.emailDomains.length) {
+        if (vm.validEmailDomains && vm.validEmailDomains.length) {
           const emailDomain = vm.user.email.split('@').pop();
-          if (vm.emailDomains.indexOf(emailDomain) === -1) {
+          if (vm.validEmailDomains.indexOf(emailDomain) === -1) {
             vm.emailError = "Email not allowed!";
             isValid = false;
           }

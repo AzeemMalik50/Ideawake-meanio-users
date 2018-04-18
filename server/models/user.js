@@ -128,6 +128,16 @@ var UserSchema = new Schema({
     match: [/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/, 'Please enter a valid email'],
     validate: [unique('User', 'email'), 'E-mail address is already in-use']
   },
+  secondaryEmail: {
+    type: String,    
+    unique: true,
+    trim: true,
+    set: toLower,
+    get: toLower,
+    // Regexp to validate emails with more strict rules as added in tests/users.js which also conforms mostly with RFC2822 guide lines
+    match: [/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/, 'Please enter a valid email'],
+    validate: [unique('User', 'secondaryEmail'), 'secondary E-mail address is already in-use']
+  },
   username: {
     type: String,
     unique: true,

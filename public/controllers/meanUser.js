@@ -67,6 +67,7 @@ angular.module('mean.users')
       vm.user = {};
 
       vm.registerForm = MeanUser.registerForm = true;
+      vm.validEmailDomains = $rootScope.platformSettings.emailDomains;
 
       vm.input = {
         type: 'password',
@@ -92,12 +93,27 @@ angular.module('mean.users')
 
       // Register the register() function
       vm.register = function () {
+        if(!validate()) return false;
         MeanUser.register(this.user);
       };
 
       $rootScope.$on('registerfailed', function () {
         vm.registerError = MeanUser.registerError;
       });
+
+
+      function validate() {        
+        let isValid = true;
+        if (vm.validEmailDomains && vm.validEmailDomains.length) {
+          const emailDomain = vm.user.email.split('@').pop();
+          if (vm.validEmailDomains.indexOf(emailDomain) === -1) {
+            vm.emailError = "Email not allowed!";
+            isValid = false;
+          }
+        }
+        return isValid;
+      }
+
     }
   ])
   .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope', '$location',
@@ -129,8 +145,8 @@ angular.module('mean.users')
         vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
       });
     }
-  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies',
-    function (MeanUser, $rootScope, $sce, $location, $cookies) {
+  ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies', '$http',
+    function (MeanUser, $rootScope, $sce, $location, $cookies, $http) {
       var vm = this;
       vm.user = {};
       vm.message = 'Verifying your request please wait...';
@@ -142,13 +158,33 @@ angular.module('mean.users')
         vm.errorMessage = $sce.trustAsHtml('This link is not valid. Please go to the <a href="/">home</a> page.');
         $rootScope.loading = false;
       });
-      /* service to verify saml token */
-      if (vm.params.n == true) {
+      /* service to verify saml token */      
+      if (vm.params.n === "true") {
         // check that if user has got any parameter named n then it mean it is a new user
         // and need to complete profile
-        localStorage.setItem('JWT', vm.params.t);
-        // $cookies.put('redirect', "/complete-profile");
-        MeanUser.loginSaml(vm.token);
+
+        // Get platform settings and see if useUserSecondaryEmail is true
+        // then redirect user to profile page. 
+        localStorage.setItem('JWT', vm.params.t);      
+        $http({
+          url: '/api/platformsettings' ,
+          method: 'get'
+        })
+        .then(function(result) {
+          const settings = result.data;
+          if (settings.useUserSecondaryEmail) {                
+            MeanUser.firstLogin = true;        
+            $cookies.put('redirect', `editProfile`); 
+          } else {
+            $cookies.put('redirect', `/`); 
+          }
+          
+          MeanUser.loginSaml(vm.token);
+        })
+        .catch(err => {
+          MeanUser.loginSaml(vm.token);
+          console.error(`An error occured while getting platform settings: ${err}` );
+        });                      
       } else if (vm.params.t) {
         localStorage.setItem('JWT', vm.params.t);
         MeanUser.loginSaml(vm.token);

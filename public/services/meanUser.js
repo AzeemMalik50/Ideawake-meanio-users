@@ -114,7 +114,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
 
           // In case user is first time logging in and redirect is set to edit Profile.         
           if (self.firstLogin && redirect === 'editProfile') {
-            redirect = `/user/${userObj._id}/edit`;
+            redirect = `/add-secondary-email/${userObj._id}`;
           }
 
           $cookies.remove('redirect');

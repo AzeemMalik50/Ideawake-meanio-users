@@ -67,6 +67,7 @@ angular.module('mean.users')
       vm.user = {};
 
       vm.registerForm = MeanUser.registerForm = true;
+      vm.validEmailDomains = $rootScope.platformSettings.emailDomains;
 
       vm.input = {
         type: 'password',
@@ -92,12 +93,27 @@ angular.module('mean.users')
 
       // Register the register() function
       vm.register = function () {
+        if(!validate()) return false;
         MeanUser.register(this.user);
       };
 
       $rootScope.$on('registerfailed', function () {
         vm.registerError = MeanUser.registerError;
       });
+
+
+      function validate() {        
+        let isValid = true;
+        if (vm.emailDomains && vm.emailDomains.length) {
+          const emailDomain = vm.user.email.split('@').pop();
+          if (vm.emailDomains.indexOf(emailDomain) === -1) {
+            vm.emailError = "Email not allowed!";
+            isValid = false;
+          }
+        }
+        return isValid;
+      }
+
     }
   ])
   .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope', '$location',

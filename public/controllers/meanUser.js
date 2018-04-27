@@ -174,17 +174,18 @@ angular.module('mean.users')
           const settings = result.data;
           if (settings.useUserSecondaryEmail) {                
             MeanUser.firstLogin = true;        
-            $cookies.put('redirect', `editProfile`); 
+            $cookies.put('redirect', 'editProfile'); 
           } else {
-            $cookies.put('redirect', `/`); 
+            $cookies.put('redirect', '/'); 
           }
           
           MeanUser.loginSaml(vm.token);
         })
-        .catch(err => {
+        .catch(function(err) {
           MeanUser.loginSaml(vm.token);
-          console.error(`An error occured while getting platform settings: ${err}` );
-        });                      
+          console.error('An error occured while getting platform settings: ' + err);
+        });
+
       } else if (vm.params.t) {
         localStorage.setItem('JWT', vm.params.t);
         MeanUser.loginSaml(vm.token);

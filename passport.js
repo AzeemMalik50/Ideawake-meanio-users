@@ -227,7 +227,7 @@ module.exports = function(passport) {
   
   passport.use(new SamlStrategy({
     entryPoint: config.strategies.saml.entryPoint,
-    issuer: config.strategies.saml.issuer ,
+    issuer: config.strategies.saml.issuer,
     callbackUrl: config.strategies.saml.callbackUrl,
     // TODO: confirm if the following three settings are necessary for any use-case
     // privateCert:  fs.readFileSync(onfig.strategies.saml.privateCert'./cert-scripts/azeem_com.key', 'utf-8'),
@@ -240,16 +240,31 @@ module.exports = function(passport) {
   },
   function(profile, done) {
     let claim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';
-    let props = ['upn', 'name', 'emailaddress'];
+    let props = [
+      'upn', // adfs
+      'name', // adfs
+      'emailaddress', // adfs, okta
+      'nameID' // okta
+    ];
+
     let userProfile = {};
+
     props.forEach(prop => {
       let value = profile[claim + prop];
-      if(Array.isArray(value)){
+      !value && (value = profile[prop]);
+
+      if (Array.isArray(value)){
         userProfile[prop] = value[0];
       } else {
         userProfile[prop] = value;        
       }
     });
+
+    // 'firstName', 'lastName' are from okta (keys depend on okta settings)
+    profile.firstName && (
+      userProfile.name = `${profile.firstName} ${profile.lastName || ''}`
+    );
+
     return done(null, userProfile);
   }));
 

@@ -173,9 +173,11 @@ exports.SAMLAuthorization = function(req, res, next) {
               roles: invite && invite.roles ? invite.roles : ['authenticated']
             };
             req.isUserNew = true;
-            return User.createUser(newUser, function(err, user){
-              if (err) {
-                throw err;
+            return User.createUser(newUser, function(errors, user) {
+              if (errors && errors.length) {
+                let err = errors[0];
+                err.message = err.msg;
+                next(err);
               } else {
                 req.user = user;
                 next();

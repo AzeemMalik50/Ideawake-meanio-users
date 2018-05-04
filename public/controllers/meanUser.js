@@ -118,13 +118,15 @@ angular.module('mean.users')
   ])
   .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope', '$location',
     function (MeanUser, $rootScope, $location) {
-      var vm = this;
+      var vm = this;      
       vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;
       vm.forgotpassword = function () {
+        vm.showResponse = false;
         MeanUser.forgotpassword(this.user);
       };
       $rootScope.$on('forgotmailsent', function (event, args) {
+        vm.showResponse = true;
         vm.response = args;
       });
     }

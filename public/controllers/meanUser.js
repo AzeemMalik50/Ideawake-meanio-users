@@ -185,7 +185,6 @@ angular.module('mean.users')
           MeanUser.loginSaml(vm.token);
           console.error('An error occured while getting platform settings: ' + err);
         });
-
       } else if (vm.params.t) {
         localStorage.setItem('JWT', vm.params.t);
         MeanUser.loginSaml(vm.token);

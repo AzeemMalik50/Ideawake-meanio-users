@@ -503,13 +503,16 @@ module.exports = function(MeanUser) {
             function(err, user) {
 
                 var response = {
-                    message: 'Mail successfully sent',
+                    message: `An email has been sent to the email address you provided below. 
+                        Please check your email to reset your password.`,
                     status: 'success'
                 };
                 if (err) {
-                    response.message = 'User does not exist';
+                    response.message = `Oops! There is no user registered with this email, 
+                        please make sure that the email you entered is correct. 
+                        If you continue having trouble, please 
+                        <a href="${config.hostname}/contact">contact support</a>`;
                     response.status = 'danger';
-
                 }
                 MeanUser.events.emit('forgot_password', {
                     action: 'forgot_password',

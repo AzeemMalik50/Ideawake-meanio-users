@@ -244,6 +244,7 @@ module.exports = function(passport) {
       'upn', // adfs
       'name', // adfs
       'emailaddress', // adfs, okta
+      'emailAddress',
       'nameID' // okta
     ];
 

@@ -156,7 +156,8 @@ exports.validateRefreshToken = function(req, res, next) {
 exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
   let email = (
-    req.user.emailaddress || req.user.email || req.user.upn
+    req.user.emailaddress || req.user.email ||
+    req.user.emailAddress || req.user.upn
   ).toLowerCase();
 
   User.findOneUser({ email }, true)

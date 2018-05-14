@@ -157,7 +157,7 @@ exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
   let email = (
     req.user.emailaddress || req.user.email ||
-    req.user.emailAddress || req.user.upn
+    req.user.emailAddress || req.user.upn || req.user.nameID
   ).toLowerCase();
 
   User.findOneUser({ email }, true)
@@ -168,7 +168,7 @@ exports.SAMLAuthorization = function(req, res, next) {
             console.log(invite)
             var newUser = {
               email: email,
-              name: req.user.name,
+              name: req.user.name || 'Unknown Name',
               adfs_metadata: req.user,
               // Added default roles in case no invite found
               roles: invite && invite.roles ? invite.roles : ['authenticated']

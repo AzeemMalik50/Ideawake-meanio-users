@@ -181,15 +181,15 @@ angular.module('mean.users')
             $cookies.put('redirect', '/'); 
           }
           
-          MeanUser.loginSaml(vm.token);
+          MeanUser.loginSaml(vm.params.t);
         })
         .catch(function(err) {
-          MeanUser.loginSaml(vm.token);
+          MeanUser.loginSaml(vm.params.t);
           console.error('An error occured while getting platform settings: ' + err);
         });
       } else if (vm.params.t) {
         localStorage.setItem('JWT', vm.params.t);
-        MeanUser.loginSaml(vm.token);
+        MeanUser.loginSaml(vm.params.t);
         $location.url('/');
       } else {
         $rootScope.$emit('adfsTokenFailed');

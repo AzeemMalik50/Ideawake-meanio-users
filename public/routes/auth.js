@@ -36,7 +36,11 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
         }
         // The following if condistion is used to check if user has old token
         // with full userProfile object. The new token contains userProfile a id(string)
-        if (user && typeof user.userProfile !== 'string') { 
+        if (
+          user
+          && typeof user.userProfile !== 'string'
+          && user.userProfile !== null
+        ) {
           clearTokensAndRedirectToLogin($location);
           return;
         } else if (lcJwt && rft && jwtHelper.isTokenExpired(lcJwt)) {

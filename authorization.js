@@ -155,6 +155,10 @@ exports.validateRefreshToken = function(req, res, next) {
 
 exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
+  const { invitationId } = 
+    req.body && req.body.RelayState 
+    ? JSON.parse(req.body.RelayState)
+    : {};    
   let email = (
     req.user.emailaddress || req.user.email ||
     req.user.emailAddress || req.user.upn || req.user.nameID
@@ -163,9 +167,11 @@ exports.SAMLAuthorization = function(req, res, next) {
   User.findOneUser({ email }, true)
     .then(user => {
       if (!user) {
-        Invite.findOneAndUpdate({ status: 'pending', email: email }, { status: 'accepted' })
-          .then(invite => {
-            console.log(invite)
+        const inviteFilters = invitationId
+          ? { _id: invitationId, status: 'pending' }
+          : { status: 'pending', email: email };        
+        Invite.findOneAndUpdate(inviteFilters, { status: 'accepted' })
+          .then(invite => {                        
             var newUser = {
               email: email,
               name: req.user.name || 'Unknown Name',

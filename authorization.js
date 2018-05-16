@@ -186,10 +186,13 @@ exports.SAMLAuthorization = function(req, res, next) {
                 err.message = err.msg;
                 next(err);
               } else {
+                req.user = user;                
+                if (!invite) return next();
+                
+                // if have invites then update user of invites after saml signup  
                 invite.user = user;
                 return invite.save()
-                  .then(result => {
-                    req.user = user;
+                  .then(result => {                    
                     next();
                   })
                   .catch(err => {

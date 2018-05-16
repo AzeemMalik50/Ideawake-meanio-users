@@ -186,8 +186,15 @@ exports.SAMLAuthorization = function(req, res, next) {
                 err.message = err.msg;
                 next(err);
               } else {
-                req.user = user;
-                next();
+                invite.user = user;
+                return invite.save()
+                  .then(result => {
+                    req.user = user;
+                    next();
+                  })
+                  .catch(err => {
+                    next(err);
+                  });                
               }
             });
           })

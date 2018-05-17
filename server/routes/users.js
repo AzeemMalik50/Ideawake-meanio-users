@@ -78,15 +78,15 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     passport.authenticate('saml', {
       failureRedirect: '/',
       failureFlash: true,
-    })(req, res,next);
+    })(req, res, next);
   });
 
   app.route('/api/adfs/postResponse').post(
     passport.authenticate('saml', { failureRedirect: '/', failureFlash: true }),
     MWs.SAMLAuthorization,
     authTokenMW(MeanUser),
-    function (req, res) {
-      res.redirect(`/saml/auth?t=${req.token}&n=${!!req.isUserNew}`);
+    function (req, res) {      
+      res.redirect(`/saml/auth?t=${req.token}&n=${!!req.isUserNew}&semail=${req.showSecondaryEmailPage}`);
     }
   );
 

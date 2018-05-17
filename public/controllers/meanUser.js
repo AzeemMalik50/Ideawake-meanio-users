@@ -174,7 +174,7 @@ angular.module('mean.users')
         })
         .then(function(result) {
           const settings = result.data;
-          if (settings.useUserSecondaryEmail) {                
+          if (settings.useUserSecondaryEmail && vm.params.semail === "true") {
             MeanUser.firstLogin = true;        
             $cookies.put('redirect', 'editProfile'); 
           } else {

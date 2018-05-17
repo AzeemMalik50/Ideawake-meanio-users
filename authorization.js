@@ -171,7 +171,7 @@ exports.SAMLAuthorization = function(req, res, next) {
           ? { _id: invitationId, status: 'pending' }
           : { status: 'pending', email: email };        
         Invite.findOneAndUpdate(inviteFilters, { status: 'accepted' })
-          .then(invite => {                        
+          .then(invite => {
             var newUser = {
               email: email,
               name: req.user.name || 'Unknown Name',
@@ -180,9 +180,12 @@ exports.SAMLAuthorization = function(req, res, next) {
               roles: invite && invite.roles ? invite.roles : ['authenticated']             
             };
             
+            req.showSecondaryEmailPage = true;
             // if while sending invite isNotificationEmail was set to true then use invite email as notification/secondary email
+            // As we are adding secondaryEmail of the user here, so lets not redirect to add-secondary-email page again.
             if (invite && invite.isNotificationEmail) {
               newUser.secondaryEmail = invite.email;
+              req.showSecondaryEmailPage = false;
             }
             
             req.isUserNew = true;

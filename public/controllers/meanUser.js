@@ -161,7 +161,7 @@ angular.module('mean.users')
         $rootScope.loading = false;
       });
       /* service to verify saml token */      
-      if (vm.params.n === "true") {
+      if (vm.params.n === "true" && vm.params.semail === "true") {
         // check that if user has got any parameter named n then it mean it is a new user
         // and need to complete profile
 
@@ -174,7 +174,7 @@ angular.module('mean.users')
         })
         .then(function(result) {
           const settings = result.data;
-          if (settings.useUserSecondaryEmail && vm.params.semail === "true") {
+          if (settings.useUserSecondaryEmail) {
             MeanUser.firstLogin = true;        
             $cookies.put('redirect', 'editProfile'); 
           } else {

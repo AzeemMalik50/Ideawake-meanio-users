@@ -236,7 +236,8 @@ module.exports = function(passport) {
     acceptedClockSkewMs: -1,
     identifierFormat: null,
     signatureAlgorithm: config.strategies.saml.callbackUrl.signatureAlgorithm,
-    disableRequestedAuthnContext: true
+    disableRequestedAuthnContext: true,
+    cert: config.strategies.saml.cert
   },
   function(profile, done) {
     let claim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';

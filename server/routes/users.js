@@ -21,7 +21,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
 
   var loginPage = config.public.loginPage;
 
-  // refresh token 
+  // refresh token
   app.route('/api/refreshtoken')
   .post(MWs.validateRefreshToken,
   authTokenMW(MeanUser),
@@ -49,17 +49,44 @@ module.exports = function (MeanUser, app, circles, database, passport) {
 
   // ========== SAML Endpoints =============
 
-  app.route('/api/saml/login')
-  .get(passport.authenticate('saml', {
-    failureRedirect: '/', failureFlash: true
-  }));
+  app.route('/api/saml/login')    
+  .get(function(req, res, next) {
+    // Using RelayState to keep track of invitationId
+    // As per SAML 2.0 specifications
+    //3.1.1 Use of RelayState
+    //Some bindings define a "RelayState" mechanism for preserving and conveying state information. When
+    //such a mechanism is used in conveying a request message as the initial step of a SAML protocol, it
+    ///places requirements on the selection and use of the binding subsequently used to convey the response.
+    //Namely, if a SAML request message is accompanied by RelayState data, then the SAML responder
+    //MUST return its SAML protocol response using a binding that also supports a RelayState mechanism, and
+    //it MUST place the exact RelayState data it received with the request into the corresponding RelayState
+    //parameter in the response.
+
+    // passport-saml does not support dynamic RelayState
+    // but passport.js does and populates RelayState using following code 
+    // var RelayState = req.query && req.query.RelayState || req.body && req.body.RelayState;
+    // if (RelayState) {
+    //  additionalParams.RelayState = RelayState;
+    // }
+    // Thus we can use RelayState for sending invitationId to IdentityProvider and get back exact same Id in Post Resposne
+    // Reference Link: 
+    //https://stackoverflow.com/questions/24601188/how-do-i-redirect-back-to-the-originally-requested-url-after-authentication-with/46555155#46555155
+    if (req.query && req.query.inv) {
+      req.query.RelayState = JSON.stringify({ invitationId: req.query.inv });
+    }
+
+    passport.authenticate('saml', {
+      failureRedirect: '/',
+      failureFlash: true,
+    })(req, res, next);
+  });
 
   app.route('/api/adfs/postResponse').post(
     passport.authenticate('saml', { failureRedirect: '/', failureFlash: true }),
     MWs.SAMLAuthorization,
     authTokenMW(MeanUser),
-    function (req, res) {
-      res.redirect(`/saml/auth?t=${req.token}&n=${!!req.isUserNew}`);
+    function (req, res) {      
+      res.redirect(`/saml/auth?t=${req.token}&n=${!!req.isUserNew}&semail=${req.showSecondaryEmailPage}`);
     }
   );
 

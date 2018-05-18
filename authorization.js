@@ -155,6 +155,10 @@ exports.validateRefreshToken = function(req, res, next) {
 
 exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
+  const { invitationId } = 
+    req.body && req.body.RelayState 
+    ? JSON.parse(req.body.RelayState)
+    : {};    
   let email = (
     req.user.emailaddress || req.user.email ||
     req.user.emailAddress || req.user.upn || req.user.nameID
@@ -163,16 +167,27 @@ exports.SAMLAuthorization = function(req, res, next) {
   User.findOneUser({ email }, true)
     .then(user => {
       if (!user) {
-        Invite.findOneAndUpdate({ status: 'pending', email: email }, { status: 'accepted' })
+        const inviteFilters = invitationId
+          ? { _id: invitationId, status: 'pending' }
+          : { status: 'pending', email: email };        
+        Invite.findOneAndUpdate(inviteFilters, { status: 'accepted' })
           .then(invite => {
-            console.log(invite)
             var newUser = {
               email: email,
               name: req.user.name || 'Unknown Name',
               adfs_metadata: req.user,
               // Added default roles in case no invite found
-              roles: invite && invite.roles ? invite.roles : ['authenticated']
+              roles: invite && invite.roles ? invite.roles : ['authenticated']             
             };
+            
+            req.showSecondaryEmailPage = true;
+            // if while sending invite isNotificationEmail was set to true then use invite email as notification/secondary email
+            // As we are adding secondaryEmail of the user here, so lets not redirect to add-secondary-email page again.
+            if (invite && invite.isNotificationEmail) {
+              newUser.secondaryEmail = invite.email;
+              req.showSecondaryEmailPage = false;
+            }
+            
             req.isUserNew = true;
             return User.createUser(newUser, function(errors, user) {
               if (errors && errors.length) {
@@ -180,8 +195,18 @@ exports.SAMLAuthorization = function(req, res, next) {
                 err.message = err.msg;
                 next(err);
               } else {
-                req.user = user;
-                next();
+                req.user = user;                
+                if (!invite) return next();
+                
+                // if have invites then update user of invites after saml signup  
+                invite.user = user;
+                return invite.save()
+                  .then(result => {                    
+                    next();
+                  })
+                  .catch(err => {
+                    next(err);
+                  });                
               }
             });
           })

@@ -341,7 +341,8 @@ module.exports = function(MeanUser) {
 					const skip = (pageNum - 1) * limit;
 					const exclude = req.body.exclude || [];
 					const filters = {};
-					const searchText = req.body.searchText || "";
+          const searchText = req.body.searchText || "";
+          const roles = req.body.roles;
 					
 					if (searchText) {
             const regex = new RegExp(searchText,"gi");
@@ -350,7 +351,14 @@ module.exports = function(MeanUser) {
               { email: regex }
 						];
 					}		      
-					
+          
+          
+          if (roles && roles.length) {
+            filters['roles'] = {
+              $in: roles
+            }
+          }
+
 					//exclude current loggedIn user as well the user sent from front-end
           exclude.push(req.user._id);           
           filters["_id"] = {

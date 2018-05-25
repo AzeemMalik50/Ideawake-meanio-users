@@ -47,7 +47,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       this.registerError = null;
       this.resetpassworderror = null;
       this.validationError = null;
-      this.firstLogin = false;      
+      this.firstLogin = false;
 
       self = this;
       $http.get('/api/users/me').then(function(response) {
@@ -70,14 +70,14 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Workaround for Angular 1.6.x
       if (response.data)
         response = response.data;
-        response.token = response.token ?  response.token: localStorage.getItem('JWT')        
+        response.token = response.token ?  response.token: localStorage.getItem('JWT')
       var encodedUser, user, destination;
-      
-      
+
+
 
       if (angular.isDefined(response.token)) {
-        localStorage.setItem('JWT', response.token);  
-        //user = jwtHelper.decodeToken(response.token);            
+        localStorage.setItem('JWT', response.token);
+        //user = jwtHelper.decodeToken(response.token);
        /*  encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
         user = JSON.parse(encodedUser); */
       }
@@ -104,15 +104,15 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Add circles info to user
       $http.get('/api/circles/mine').then(function(response) {
         self.acl = response.data;
-        
-        $rootScope.loading = false;   
+
+        $rootScope.loading = false;
         $rootScope.$emit('loggedin', userObj);
-        
+
         Global.authenticate(userObj);
         if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
           var redirect = $cookies.get('redirect');
 
-          // In case user is first time logging in and redirect is set to edit Profile.         
+          // In case user is first time logging in and redirect is set to edit Profile.
           if (self.firstLogin && redirect === 'editProfile') {
             redirect = '/add-secondary-email/' + userObj._id;
           }
@@ -168,7 +168,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         .then(this.onIdentity.bind(this))
         .catch(this.onIdFail.bind(this));
     };
-    // login with saml 
+    // login with saml
     MeanUserKlass.prototype.loginSaml = function (token) {
       $http.get('/api/verifyToken', {
           token: token,
@@ -201,7 +201,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         .catch(this.onIdFail.bind(this));
 
       };
-      
+
     MeanUserKlass.prototype.checkPasswordToken = function(user) {
       $http.get('/api/reset/' + $stateParams.tokenId)
       .then(function(response) {
@@ -307,6 +307,20 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         deferred.resolve(result.data);
 
       }, function(error) {
+        console.log('searched user error', error);
+        deferred.reject(error);
+      });
+      return deferred.promise;
+    };
+
+    MeanUserKlass.prototype.searchUsers = function(data){
+      var deferred = $q.defer();
+      $http.post('/api/users/search', data)
+        .then(function(result) {
+          console.log('searched user result', result);
+          deferred.resolve(result.data);
+      })
+      .catch(function(error) {
         console.log('searched user error', error);
         deferred.reject(error);
       });

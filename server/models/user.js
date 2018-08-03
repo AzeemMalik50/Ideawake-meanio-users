@@ -151,8 +151,8 @@ var UserSchema = new Schema({
   },
   hashed_password: {
     type: String,
-    select: false,
-    validate: [validatePresenceOf, 'Password cannot be blank']
+    validate: [validatePresenceOf, 'Password cannot be blank'],
+    select: false
   },
   provider: {
     type: String,
@@ -217,6 +217,7 @@ UserSchema.statics.load = function(id, cb) {
 
 UserSchema.statics.findOneUser = function(query, resolveIfNotFound) {
   return this.findOne(query)
+  .select('+hashed_password +salt')
   .populate('userProfile')
   .exec()
   .then(user => {

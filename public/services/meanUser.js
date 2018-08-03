@@ -1,9 +1,8 @@
 'use strict';
 
 angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$location', '$stateParams',
-  '$cookies', '$q', '$timeout', '$meanConfig', 'Global',
-  function($rootScope, $http, $location, $stateParams, $cookies, $q, $timeout, $meanConfig, Global) {
-
+  '$cookies', '$q', '$timeout', '$meanConfig', 'Global', 'jwtHelper', 'localization',
+  function($rootScope, $http, $location, $stateParams, $cookies, $q, $timeout, $meanConfig, Global, jwtHelper, localization) {
     var self;
 
     function escape(html) {
@@ -48,6 +47,8 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       this.registerError = null;
       this.resetpassworderror = null;
       this.validationError = null;
+      this.firstLogin = false;      
+
       self = this;
       $http.get('/api/users/me').then(function(response) {
         if(!response.data && $cookies.get('token') && $cookies.get('redirect')) {
@@ -69,18 +70,25 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Workaround for Angular 1.6.x
       if (response.data)
         response = response.data;
-
+        response.token = response.token ?  response.token: localStorage.getItem('JWT')        
       var encodedUser, user, destination;
+      
+      
 
       if (angular.isDefined(response.token)) {
-        localStorage.setItem('JWT', response.token);
-        encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
-        user = JSON.parse(encodedUser);
+        localStorage.setItem('JWT', response.token);  
+        //user = jwtHelper.decodeToken(response.token);            
+       /*  encodedUser = decodeURI(b64_to_utf8(response.token.split('.')[1]));
+        user = JSON.parse(encodedUser); */
+      }
+
+      if (angular.isDefined(response.refreshToken)) {
+        localStorage.setItem('rft', response.refreshToken);
       }
 
       destination = angular.isDefined(response.redirect) ? response.redirect : destination;
 
-      this.user = user || response;
+      this.user = response.user || response;
       this.loggedin = true;
       this.loginError = 0;
       this.registerError = 0;
@@ -96,16 +104,27 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       // Add circles info to user
       $http.get('/api/circles/mine').then(function(response) {
         self.acl = response.data;
-
+        
+        $rootScope.loading = false;   
         $rootScope.$emit('loggedin', userObj);
+        
         Global.authenticate(userObj);
         if(typeof($cookies.get('redirect')) !== 'undefined' && ($cookies.get('redirect') !== 'undefined')) {
           var redirect = $cookies.get('redirect');
+
+          // In case user is first time logging in and redirect is set to edit Profile.         
+          if (self.firstLogin && redirect === 'editProfile') {
+            redirect = '/add-secondary-email/' + userObj._id;
+          }
+
           $cookies.remove('redirect');
-          $location.path(redirect);
+          $location.url(redirect);
         } else if (destination) {
-          $location.path(destination);
+          $location.url(destination);
         }
+        // else {
+        //   $location.url('/');
+        // }
       });
     };
 
@@ -127,6 +146,15 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       $rootScope.$emit('registerfailed');
     };
 
+    // adfs error handling
+    MeanUserKlass.prototype.onAdfsTokenFail = function (response) {
+
+      if (response.data)
+        response = response.data;
+
+        $rootScope.$emit('adfsTokenFailed');
+    };
+
     var MeanUser = new MeanUserKlass();
 
     MeanUserKlass.prototype.login = function (user) {
@@ -140,6 +168,14 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         .then(this.onIdentity.bind(this))
         .catch(this.onIdFail.bind(this));
     };
+    // login with saml 
+    MeanUserKlass.prototype.loginSaml = function (token) {
+      $http.get('/api/verifyToken', {
+          token: token,
+        })
+        .then(this.onIdentity.bind(this))
+        .catch(this.onAdfsTokenFail.bind(this));
+    };
 
     MeanUserKlass.prototype.register = function(user) {
       $http.post('/api/register', {
@@ -148,6 +184,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         confirmPassword: user.confirmPassword,
         username: user.username,
         name: user.name,
+        defaultLanguage: user.defaultLanguage || 'en-US',
         inviteId: (user.inviteId) ? user.inviteId : null,
         roles: user.roles
       })
@@ -164,6 +201,19 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         .catch(this.onIdFail.bind(this));
 
       };
+      
+    MeanUserKlass.prototype.checkPasswordToken = function(user) {
+      $http.get('/api/reset/' + $stateParams.tokenId)
+      .then(function(response) {
+        if(response.status == 400) {
+          $rootScope.$emit('resetpassworderror', response.data.msg);
+        }
+      }, function(error) {
+        if(error.data && error.data.msg) {
+          $rootScope.$emit('resetpassworderror', error.data.msg);
+        }
+      });
+    };
 
     MeanUserKlass.prototype.forgotpassword = function(user) {
         $http.post('/api/forgot-password', {
@@ -184,6 +234,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
         localStorage.removeItem('JWT');
         $rootScope.$emit('logout');
         Global.authenticate();
+        localization.changeLanguage();
       });
     };
 

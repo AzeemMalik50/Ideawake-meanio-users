@@ -50,6 +50,9 @@ var UserProfileSchema = new Schema({
     type: Number,
     default: 0
   },
+  pointsLog: { // gamification logging
+    type: Array
+  },
   profileImage: {
     'uploadType' : String,
     'path' : String,
@@ -74,13 +77,54 @@ var UserProfileSchema = new Schema({
     'ideaDailyEmails': {
       type: Boolean,
       default: true
+    },
+    'commentReplyEmails': {
+      type: Boolean,
+      default: true
+    },
+    'userDigestEmails': {
+      type: Boolean,
+      default: true
+    },
+    'userDigestLastSent': {
+      type: Date
     }
   },
   deleted: {
     type: Boolean,
     default: false
+  },
+  defaultLanguage:{
+    type: String,
+    default: 'en-US',
+    enum: ['en-US', 'fr', 'es']
+  },
+  demographics: {
+    educationLevel: String,
+    majorEducation: String,
+    currentYears: String,
+    totalYears: String,
+    cityAndState: String,
+    currentTitle: String,
+    isManager: Boolean,
+    totalSubordinates: Number,
+    directSupervisorTitle: String
   }
 });
+
+
+UserProfileSchema.methods.updateDemographicsAndLanguage =
+  function(demographics, language) {
+    this.demographics = Object.assign(this.demographics, demographics);
+    if (language) {
+      this.defaultLanguage = language;
+    } else {
+      this.defaultLanguage = 'en-US';
+    }
+
+    return this.save();
+  };
+
 
 /**
  * Validations

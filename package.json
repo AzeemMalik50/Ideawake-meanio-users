@@ -3,7 +3,7 @@
   "mean": "0.6.x",
   "version": "0.1.6",
   "dependencies": {
-    "angular-jwt": "^0.1.5",
+    "angular-jwt": "^0.1.9",
     "meanio-circles": "^0.1.x",
     "nodemailer": "^2.6.4",
     "passport-facebook": "^2.1.1",
@@ -11,7 +11,9 @@
     "passport-google-oauth": "^1.0.0",
     "passport-linkedin": "^1.0.0",
     "passport-local": "^1.0.0",
-    "passport-twitter": "^1.0.4"
+    "passport-saml": "^0.32.1",
+    "passport-twitter": "^1.0.4",
+    "rand-token": "^0.4.0"
   },
   "description": "Users package",
   "devDependencies": {},

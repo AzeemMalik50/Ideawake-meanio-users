@@ -8,6 +8,7 @@ var mongoose = require('mongoose'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
   LinkedinStrategy = require('passport-linkedin').Strategy,
   SlackStrategy = require('passport-slack').Strategy,
+  SamlStrategy = require('passport-saml').Strategy,
   User = mongoose.model('User'),
   config = require('meanio').getConfig();
   // PlatformSetting = mongoose.model('PlatformSetting');
@@ -17,17 +18,21 @@ var mongoose = require('mongoose'),
 module.exports = function(passport) {
   // Serialize the user id to push into the session
   passport.serializeUser(function(user, done) {
-    done(null, user.id);
+    done(null, user);
   });
 
   // Deserialize the user object based on a pre-serialized token
   // which is the user id
-  passport.deserializeUser(function(id, done) {
-    User.findOne({
-      _id: id
-    }, '-salt -hashed_password', function(err, user) {
-      done(err, user);
-    });
+  passport.deserializeUser(function(user, done) {
+    if(user.id){
+      User.findOne({
+        _id: id
+      }, '-salt -hashed_password', function(err, user) {
+        done(err, user);
+      });
+    }else{
+      done(null,user);
+    }
   });
 
   // Use local strategy
@@ -36,23 +41,12 @@ module.exports = function(passport) {
       passwordField: 'password'
     },
     function(email, password, done) {
-      User.findOne({
-        email: email
-      }, function(err, user) {
-        if (err) {
-          return done(err);
-        }
-        if (!user) {
-          return done(null, false, {
-            message: 'Unknown user'
-          });
-        }
-        if (!user.authenticate(password)) {
-          return done(null, false, {
-            message: 'Invalid password'
-          });
-        }
-        return done(null, user);
+      User.findAndAuthenticate({email}, password)
+      .then(user => {
+        done(null, user)
+      })
+      .catch(err => {
+        typeof err === 'string' ? done(null, false, {message: err}) : done(err);
       });
     }
   ));
@@ -229,6 +223,52 @@ module.exports = function(passport) {
     }
   ));
 
+  // use SAML strategy
+  
+  passport.use(new SamlStrategy({
+    entryPoint: config.strategies.saml.entryPoint,
+    issuer: config.strategies.saml.issuer,
+    callbackUrl: config.strategies.saml.callbackUrl,
+    // TODO: confirm if the following three settings are necessary for any use-case
+    // privateCert:  fs.readFileSync(onfig.strategies.saml.privateCert'./cert-scripts/azeem_com.key', 'utf-8'),
+    // cert: fs.readFileSync(onfig.strategies.saml.cert './cert-scripts/adfs.ideawake_com_pk.crt', 'utf-8'),
+    // authnContext: 'http://schemas.microsoft.com/ws/2008/06/identity/authenticationmethod/password',
+    acceptedClockSkewMs: -1,
+    identifierFormat: null,
+    signatureAlgorithm: config.strategies.saml.callbackUrl.signatureAlgorithm,
+    disableRequestedAuthnContext: true,
+    cert: config.strategies.saml.cert
+  },
+  function(profile, done) {
+    let claim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';
+    let props = [
+      'upn', // adfs
+      'name', // adfs
+      'emailaddress', // adfs, okta
+      'emailAddress',
+      'nameID' // okta
+    ];
+
+    let userProfile = {};
+
+    props.forEach(prop => {
+      let value = profile[claim + prop];
+      !value && (value = profile[prop]);
+
+      if (Array.isArray(value)){
+        userProfile[prop] = value[0];
+      } else {
+        userProfile[prop] = value;        
+      }
+    });
+
+    // 'firstName', 'lastName' are from okta (keys depend on okta settings)
+    profile.firstName && (
+      userProfile.name = `${profile.firstName} ${profile.lastName || ''}`
+    );
+
+    return done(null, userProfile);
+  }));
 
     var db = mongoose.connection;
     var collection = db.collection('platformsettings');

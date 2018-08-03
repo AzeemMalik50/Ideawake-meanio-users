@@ -28,15 +28,16 @@ function sendMail(mailOptions) {
 
 function createUserProfile(user, callback) {
     UserProfile.find({'user' : user._id}).exec(function(err, results){
-        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         if(results && results.length > 0) {
             callback(results[0]);
         } else {
+            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Creating a UserProfile for User!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
             var newUserProfile = new UserProfile();
             newUserProfile.user = user._id;
             user.name = (!user.name) ? 'Unknown User' : user.name;
             newUserProfile.displayName = user.name;
             newUserProfile.description = user.name;
+            newUserProfile.defaultLanguage = user.defaultLanguage || 'en-US';
             newUserProfile.profileImage = {};
             newUserProfile.save(function(err) {
                 if (err) {
@@ -55,7 +56,33 @@ function createUserProfile(user, callback) {
             });
         }
      });
-};
+}
+
+function updateLastSeenTime(user, callback) {
+    var update = false;
+    var now = new Date().getTime();;
+
+    if(typeof user.lastSeen === undefined) {
+        user.lastSeen = now;
+        update = true;
+    } else {
+        console.log('New Date', now);
+        console.log('Old Date', user.lastSeen.getTime())
+        if((now) - user.lastSeen.getTime() > config.userLastSeenTimeout){
+            user.lastSeen = now;
+            update = true;
+        }
+    }
+
+    if(update) {
+        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Updating ' + (user.name || user.username) + ' Last Seen to: ', user.lastSeen);
+        user.save(function(err) {
+            callback(user);
+        });
+    } else {
+        callback(user);
+    }
+}
 
 
 module.exports = function(MeanUser) {
@@ -64,13 +91,17 @@ module.exports = function(MeanUser) {
          * Auth callback
          */
         authCallback: function(req, res) {
-            var payload = req.user;
-            var escaped = JSON.stringify(payload);
-            escaped = encodeURI(escaped);
+            var payload = req.user && req.user._doc ? req.user._doc : req.user;
+            /* var escaped = JSON.stringify(payload);
+            escaped = encodeURI(escaped); */
             // We are sending the payload inside the token
-            var token = jwt.sign(escaped, config.secret);
+            let cleansedProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+            payload.userProfile = cleansedProfile;
+            var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
             res.cookie('token', token);
+
             var destination = req.redirect || config.strategies.landingPage;
+
             if(!req.cookies.redirect) {
                 res.cookie('redirect', destination);
                 res.redirect(destination);
@@ -179,113 +210,62 @@ module.exports = function(MeanUser) {
             var platformSettings = {};
 
             collection.find().toArray(function(err, result) {
-                // here ...
-                //  console.log(platformSettings);
-                if(result && result.length > 0) {
-                    // console.log(result[0]);
+                if (result && result.length > 0) {
                     platformSettings = result[0];
-                    if(platformSettings.inviteOnlyMode === true && req.body.inviteId === null) {
+                    if (platformSettings.inviteOnlyMode === true && req.body.inviteId === null) {
                         console.log('BAILING OUT!!!!!');
                         return res.status(400);
                     }
-
-                    var user = new User(req.body);
-                    user.provider = 'local';
-                    user.email = user.email.toLowerCase();
+                    req.body.provider = 'local';
 
                     // because we set our user.provider to local our models/user.js validation will always be true
                     req.assert('name', 'You must enter a name').notEmpty();
                     req.assert('email', 'You must enter a valid email address').isEmail();
                     req.assert('password', 'Password must be between 6-100 characters long').len(6, 100);
                     // req.assert('username', 'Username cannot be more than 20 characters').len(1, 20);
-                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
+                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);                    
+
 
                     var errors = req.validationErrors();
+                    
+                    const platFormEmailDomains = platformSettings.emailDomains;
+                    if (platFormEmailDomains && platFormEmailDomains.length) {
+                        const emailDomain = req.body.email.split('@').pop();
+                        if (platFormEmailDomains.indexOf(emailDomain) === -1) {
+                            errors = errors || [];
+                            errors.push({
+                              param: 'email',
+                              msg: 'Email not allowed',
+                              value: req.body.email
+                          });
+                        }
+                    }
+
                     if (errors) {
                         return res.status(400).send(errors);
                     }
 
-                    user.roles ? user.roles : ['authenticated'];
-                    user.save(function(err) {
+
+                    User.createUser(req.body, function(err, user) {
                         if (err) {
-                            switch (err.code) {
-                                case 11000:
-                                case 11001:
-                                res.status(400).json([{
-                                    msg: 'Email or username already taken',
-                                    param: 'username'
-                                }]);
-                                break;
-                                default:
-                                var modelErrors = [];
-
-                                if (err.errors) {
-                                    for (var x in err.errors) {
-                                        modelErrors.push({
-                                            param: x,
-                                            msg: err.errors[x].message,
-                                            value: err.errors[x].value
-                                        });
-                                    }
-
-                                    res.status(400).json(modelErrors);
-                                }
-                            }
-                            return res.status(400);
-                        }
-
-                        if(user.userProfile === null) {
-                            createUserProfile(user, function(ret) {
-                                var payload = user;
-                                user.userProfile = ret;
-                                payload.redirect = req.body.redirect;
-                                var escaped = JSON.stringify(payload);
-                                escaped = encodeURI(escaped);
-                                req.logIn(user, function(err) {
-                                    if (err) { return next(err); }
-
-                                    MeanUser.events.emit('created', {
-                                        action: 'created',
-                                        user: {
-                                            name: req.user.name,
-                                            username: user.username,
-                                            email: user.email
-                                        }
-                                    });
-
-                                    // We are sending the payload inside the token
-                                    var token = jwt.sign(escaped, config.secret);
-                                    res.json({
-                                      token: token,
-                                      redirect: config.strategies.landingPage
-                                    });
-                                });
-                            });
+                            return res.status(400).json(err);
                         } else {
-                            var payload = user;
-                            payload.redirect = req.body.redirect;
-                            var escaped = JSON.stringify(payload);
-                            escaped = encodeURI(escaped);
-                            req.logIn(user, function(err) {
-                                if (err) { return next(err); }
+                            req.user = user;
 
-                                MeanUser.events.emit('created', {
-                                    action: 'created',
-                                    user: {
-                                        name: req.user.name,
-                                        username: user.username,
-                                        email: user.email
-                                    }
-                                });
-
-                                // We are sending the payload inside the token
-                                var token = jwt.sign(escaped, config.secret);
-                                res.json({
-                                  token: token,
-                                  redirect: config.strategies.landingPage
-                                });
+                            MeanUser.events.emit('created', {
+                                action: 'created',
+                                user: {
+                                    name: user.name,
+                                    username: user.username,
+                                    email: user.email
+                                }
                             });
-                            res.status(200);
+
+                            if (req.body && req.body.redirect) {
+                                req.redirect = req.body.redirect
+                            }
+
+                            next();
                         }
                     });
                 }
@@ -299,7 +279,8 @@ module.exports = function(MeanUser) {
                     if (err) return next(err);
                     if(user.userProfile === null) {
                         createUserProfile(user, function(profile) {
-                            user.userProfile = profile;
+                            let cleansedProfile = _.omit(profile, ['pointsLog']);
+                            user.userProfile = cleansedProfile;
                             res.send(user ? user : '0');
                         });
                     } else {
@@ -312,33 +293,31 @@ module.exports = function(MeanUser) {
          */
         me: function(req, res) {
             if (!req.user) return res.send(null);
-
-            if(req.user.userProfile === null) {
+           // updateLastSeenTime(req.user, function(updatedUser) { // moved to platformsettings
                 createUserProfile(req.user, function(profile) {
-                    if(!req.refreshJWT) {
-                        req.user.userProfile = profile;
-                        return res.json(req.user);
-                    } else {
-                        req.user.userProfile = profile;
-                        var payload = req.user;
-                        var escaped = JSON.stringify(payload);
-                        escaped = encodeURI(escaped);
-                        var token = jwt.sign(escaped, config.secret);
-                        res.json({ token: token });
-                    }
-                });
-            } else {
-                if(!req.refreshJWT) {
+                    let cleansedProfile = _.omit(profile, ['pointsLog']);                    
+                    req.user.userProfile = cleansedProfile;
                     return res.json(req.user);
-                } else {
-                    var payload = req.user;
-                    var escaped = JSON.stringify(payload);
-                    escaped = encodeURI(escaped);
-                    var token = jwt.sign(escaped, config.secret);
-                    res.json({ token: token });
-                }
-            }
 
+                    //  Follwing was used in case when db has updated but token still has old values. but as for now we are not
+                    //  decoding token on front-end, this is not needed. 
+
+                    // if(!req.refreshJWT) {
+                    //     req.user.userProfile = cleansedProfile;
+                    //     return res.json(req.user);
+                    // } else {        
+
+                    //     req.user.userProfile = cleansedProfile;
+                    //     let toEncode = req.user && req.user._doc ? req.user._doc : req.user;
+                    //     let payload = _.omit(toEncode, ['salt', 'hashed_password']);
+                    //     payload.userProfile = _.omit(payload.userProfile._doc ? payload.userProfile._doc : payload.userProfile, ['pointsLog']);
+                    //    /*  var escaped = JSON.stringify(payload);
+                    //     escaped = encodeURI(escaped); */
+                    //     var token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
+                    //     res.json({ token: token });
+                    // }
+                });
+           // });
         },
 
         /**
@@ -361,7 +340,6 @@ module.exports = function(MeanUser) {
           if(req.query.hasRole){
             searchObj.roles = {$in :[req.query.hasRole]};
           }
-          console.log('user.searchObj', searchObj, req.query);
           User.find(searchObj).sort('username')
             .populate('userProfile')
             .exec(function(err, users){
@@ -389,31 +367,54 @@ module.exports = function(MeanUser) {
                     var dbUser = user.toJSON();
                     var id = req.user._id;
 
-                    delete dbUser._id;
-                    delete req.user._id;
+                    //  Follwing was used in case when db has updated but token still has old values. but as for now we are not
+                    //  decoding token on front-end, this is not needed. 
 
-                    var eq = _.isEqual(dbUser, req.user);
-                    if (!eq) {
-                        req.refreshJWT = true;
-                    }
+                    // delete dbUser._id;
+                    // delete req.user._id;                    
+                    
+                    // var eq = _.isEqual(dbUser, req.user);
+                    // if (!eq) {
+                    //     req.refreshJWT = true;
+                    // }
 
                     req.user = user;
                     next();
                 }
             });
         },
-
+        checkResetToken: function(req, res, next) {
+            User.findOne({
+              resetPasswordToken: req.params.token,
+              resetPasswordExpires: {
+                $gt: Date.now()
+              }
+            }).exec(function(err, user) {
+              if (err) {
+                return res.status(400).json({
+                    msg: err
+                });
+              }
+              if (!user) {
+                return res.status(400).json({
+                    msg: 'Please go to the reset password page and enter your email to get a new link.'
+                });
+              }
+              return res.sendStatus(200);
+            })
+        },
         /**
          * Resets the password
          */
-
         resetpassword: function(req, res, next) {
             User.findOne({
                 resetPasswordToken: req.params.token,
                 resetPasswordExpires: {
                     $gt: Date.now()
                 }
-            }).populate('userProfile').exec(function(err, user) {
+            })
+            .populate('userProfile')
+            .exec(function(err, user) {
                 if (err) {
                     return res.status(400).json({
                         msg: err
@@ -432,28 +433,27 @@ module.exports = function(MeanUser) {
                 }
                 user.password = req.body.password;
                 user.resetPasswordToken = undefined;
-                user.resetPasswordExpires = undefined;
+                user.resetPasswordExpires = undefined;                                
                 user.save(function(err) {
-                    var escaped = JSON.stringify(user);
-                        escaped = encodeURI(escaped);
-                    var token = jwt.sign(escaped, config.secret);
-                    var destination = req.redirect || config.strategies.landingPage;
+                    let userCleansed = _.omit(user.toObject(), [
+                        'salt',
+                        'hashed_password'
+                    ]);                                        
+
+                    req.redirect = req.body.hasOwnProperty('redirect') 
+                                    && req.body.redirect !== false 
+                                    && (payload.redirect = req.body.redirect);
 
                     MeanUser.events.emit('reset_password', {
                         action: 'reset_password',
                         user: {
                             name: user.name
                         }
-                    });
-
-                    req.logIn(user, function(err) {
+                    });                    
+                    req.logIn(userCleansed, function(err) {
                         if (err) return next(err);
-                        res.cookie('redirect', destination);
-                        return res.send({
-                            user: user,
-                            token: token,
-                            redirect: destination
-                        });
+                        req.user = user;                        
+                        next();
                     });
                 });
             });
@@ -485,7 +485,7 @@ module.exports = function(MeanUser) {
                 },
                 function(user, token, done) {
                     user.resetPasswordToken = token;
-                    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+                    user.resetPasswordExpires = Date.now() + 21600000; // 6 hour
                     user.save(function(err) {
                         done(err, token, user);
                     });
@@ -503,13 +503,16 @@ module.exports = function(MeanUser) {
             function(err, user) {
 
                 var response = {
-                    message: 'Mail successfully sent',
+                    message: `An email has been sent to the email address you provided below. 
+                        Please check your email to reset your password.`,
                     status: 'success'
                 };
                 if (err) {
-                    response.message = 'User does not exist';
+                    response.message = `Oops! There is no user registered with this email, 
+                        please make sure that the email you entered is correct. 
+                        If you continue having trouble, please 
+                        <a href="${config.hostname}/contact">contact support</a>`;
                     response.status = 'danger';
-
                 }
                 MeanUser.events.emit('forgot_password', {
                     action: 'forgot_password',
@@ -522,4 +525,3 @@ module.exports = function(MeanUser) {
         }
     };
 }
-

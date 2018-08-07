@@ -15,14 +15,70 @@ var mongoose = require('mongoose'),
   _ = require('lodash'),
   jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
+const EmailTemplate = require('email-templates').EmailTemplate;
+const path = require('path');
+
+function sendByTemplate(template, contextOptions, mailOptions, cb) {
+  let emailLogoUrl = 'https://gallery.mailchimp.com/a4ba02972580aa81f393d12ad/images/cc42f469-c38a-44b6-934f-855ba91adb98.png';
+  const PlatformSettings = mongoose.model('PlatformSetting');
+  PlatformSettings.findOne({}, function(err, settings){
+    if (err) cb(err);
+    emailLogoUrl = settings.emailLogo && settings.emailLogo.url 
+      ? settings.emailLogo.url : emailLogoUrl;
+    emailLogoUrl = encodeURI(emailLogoUrl);
+    const defaultContextOptions = {
+      hostname: config.hostname || process.env.HOST_NAME,
+      companyName: process.env.COMPANY_NAME,
+      nl2br: function(str) { return str.replace(/\r|\n|\r\n/g, '<br />') },
+      settings: {
+          views: path.join(config.root, '/packages/custom/mailer/templates/')
+      },
+      emailLogoUrl
+    };
+    const { to, from, subject } = mailOptions;
+    const defaultMailOptions = {
+      to,
+      from,
+      subject,
+      track_opens: true,
+      track_clicks: false, 
+    };  
+    const templateDir = 
+      path.join(config.root, '/packages/custom/mailer/templates/', template);
+    const email = new EmailTemplate(templateDir);
+    email.render(
+      _.merge(defaultContextOptions, contextOptions),
+      function(err, result) {
+        if (err) {
+            console.log(`>>>> ======================= EmailTemplates error ======================= >>>>`, template, err);
+            cb('Error processing email template');
+            // return;
+        } else {                            
+          const options = _.merge(defaultMailOptions, {
+            html: result.html,
+            text: result.text
+          });        
+          sendMail(options, function(err, response) {
+            if(err) console.log('Error in Sending Reset Password Email', err);
+          });
+          cb();
+        }
+      }
+    );
+  });  
+}
+
 /**
  * Send reset password email
  */
-function sendMail(mailOptions) {
-    var transport = nodemailer.createTransport(mandrillTransport(config.mailer));
+function sendMail(mailOptions, cb) {    
+    var transport = nodemailer.createTransport(mandrillTransport(config.mailer));    
     transport.sendMail(mailOptions, function(err, response) {
-        if (err) return err;
-        return response;
+        if(err) {
+          cb(err);
+        } else {
+          cb(null, response);
+        }
     });
 }
 
@@ -491,13 +547,23 @@ module.exports = function(MeanUser) {
                     });
                 },
                 function(token, user, done) {
-                    var mailOptions = {
-                        to: user.email,
-                        from: config.emailFrom
+                    const template = "forgot-password";
+                    const context = {
+                      user,
+                      token
                     };
-                    mailOptions = templates.forgot_password_email(user, req, token, mailOptions);
-                    sendMail(mailOptions);
-                    done(null, user);
+                    const mailOptions = {
+                      to: user.email,
+                      from: config.emailFrom,
+                      subject: 'Ideawake - changing your password'
+                    };
+                    sendByTemplate(template, context, mailOptions, function(err){
+                      if (err) {
+                        done(err);
+                      }else {
+                        done(null, user);
+                      }
+                    });                                        
                 }
             ],
             function(err, user) {

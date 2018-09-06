@@ -35,6 +35,8 @@ module.exports = function(UserProfiles, app, circles, database, io) {
     .post(/*auth.requiresLogin,*/ hasPermissions, userProfiles.create);
   app.route('/api/userProfiles/points/add')
     .post(/*auth.requiresLogin,*/ hasPermissions, userProfiles.addPoints);
+  app.route('/api/userProfiles/points/remove')
+    .post(/*auth.requiresLogin,*/ hasPermissions, userProfiles.removePoints);
   app.route('/api/leaderboard').get(userProfiles.leaderboard);
    // .put(/*auth.isMongoId,*/ auth.requiresLogin, hasAuthorization, hasPermissions, userProfiles.update)
    // .delete(/*auth.isMongoId,*/ auth.requiresLogin, hasAuthorization, userProfiles.destroy);

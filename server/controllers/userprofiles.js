@@ -380,6 +380,47 @@ module.exports = function(UserProfiles, http) {
 
             });
         },
+
+        removePoints: function(req, res) {
+          if(
+              !req.body 
+              || !req.body.points
+              || !req.body.userId 
+              || !mongoose.Types.ObjectId.isValid(req.body.userId)
+            ) {
+            return res.status(500).json({
+                error: 'Cannot remove points from userProfile',
+                body : req.body
+            });
+          }
+
+          const points = parseInt(req.body.points) * -1;          
+          UserProfile
+            .findOneAndUpdate(
+              { 'user': req.body.userId },
+              { '$inc' : { 
+                  points
+                }
+              },
+              {
+                'new': true,
+                'upsert': true
+              })
+              .then(profile => {
+                const pointLog = {
+                    'date' : new Date(),
+                    'total': profile.points,
+                     points,
+                    'description': req.body.description
+                }
+                if (!profile.pointsLog) profile.pointsLog = [];
+                profile.pointsLog.push(pointLog);
+                return profile.save();
+              })
+              .then(results => res.json({ success: true }))
+              .catch(err => res.status(500).json({ error: err.toString() }));
+        },
+
         leaderboard: function(req,res) {
             UserProfile.find().sort({'points':-1}).sort({'startDate':1}).limit(50)
                 .populate('user', 'name username email roles')

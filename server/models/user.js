@@ -151,7 +151,8 @@ var UserSchema = new Schema({
   },
   hashed_password: {
     type: String,
-    validate: [validatePresenceOf, 'Password cannot be blank']
+    validate: [validatePresenceOf, 'Password cannot be blank'],
+    select: false
   },
   provider: {
     type: String,
@@ -167,9 +168,18 @@ var UserSchema = new Schema({
       default: true
     }
   },
-  salt: String,
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
+  salt: {
+    type: String,
+    select: false
+  },
+  resetPasswordToken: {
+    type: String,
+    select: false
+  },
+  resetPasswordExpires: {
+    type: Date,
+    select: false
+  },
   profile: {},
   facebook: {},
   twitter: {},
@@ -207,6 +217,7 @@ UserSchema.statics.load = function(id, cb) {
 
 UserSchema.statics.findOneUser = function(query, resolveIfNotFound) {
   return this.findOne(query)
+  .select('+hashed_password +salt')
   .populate('userProfile')
   .exec()
   .then(user => {

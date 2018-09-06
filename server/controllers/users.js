@@ -351,17 +351,17 @@ module.exports = function(MeanUser) {
             if (!req.user) return res.send(null);
            // updateLastSeenTime(req.user, function(updatedUser) { // moved to platformsettings
                 createUserProfile(req.user, function(profile) {
-                    let cleansedProfile = _.omit(profile, ['pointsLog']);                    
+                    let cleansedProfile = _.omit(profile, ['pointsLog']);
                     req.user.userProfile = cleansedProfile;
                     return res.json(req.user);
 
                     //  Follwing was used in case when db has updated but token still has old values. but as for now we are not
-                    //  decoding token on front-end, this is not needed. 
+                    //  decoding token on front-end, this is not needed.
 
                     // if(!req.refreshJWT) {
                     //     req.user.userProfile = cleansedProfile;
                     //     return res.json(req.user);
-                    // } else {        
+                    // } else {
 
                     //     req.user.userProfile = cleansedProfile;
                     //     let toEncode = req.user && req.user._doc ? req.user._doc : req.user;
@@ -392,15 +392,44 @@ module.exports = function(MeanUser) {
             });
         },
         search: function(req,res) {
-          var searchObj = {};
-          if(req.query.hasRole){
-            searchObj.roles = {$in :[req.query.hasRole]};
+					const pageNum = req.body.pageNum || 1;
+					const limit = (req.body.limit) ? parseInt(req.body.limit) : 10;
+					const skip = (pageNum - 1) * limit;
+					const exclude = req.body.exclude || [];
+					const filters = {};
+          const searchText = req.body.searchText || "";
+          const roles = req.body.roles;
+					
+					if (searchText) {
+            const regex = new RegExp(searchText,"gi");
+						filters['$or'] = [
+              { name: regex },
+              { email: regex }
+						];
+					}		      
+          
+          
+          if (roles && roles.length) {
+            filters['roles'] = {
+              $in: roles
+            }
           }
-          User.find(searchObj).sort('username')
-            .populate('userProfile')
-            .exec(function(err, users){
-                res.send(users);
-          });
+
+					//exclude current loggedIn user as well the user sent from front-end
+          exclude.push(req.user._id);           
+          filters["_id"] = {
+            "$nin": exclude
+          };					
+
+					User.find(filters)
+            .lean()
+            .select("username name email")
+						.sort('name')
+						.skip(skip)
+						.limit(limit)
+						.exec()
+						.then(users => res.json({ users }))
+						.catch(err => console.log(`Error: ${err}`));
         },
         /**
        * Loads a user into the request
@@ -424,11 +453,11 @@ module.exports = function(MeanUser) {
                     var id = req.user._id;
 
                     //  Follwing was used in case when db has updated but token still has old values. but as for now we are not
-                    //  decoding token on front-end, this is not needed. 
+                    //  decoding token on front-end, this is not needed.
 
                     // delete dbUser._id;
-                    // delete req.user._id;                    
-                    
+                    // delete req.user._id;
+
                     // var eq = _.isEqual(dbUser, req.user);
                     // if (!eq) {
                     //     req.refreshJWT = true;
@@ -489,15 +518,15 @@ module.exports = function(MeanUser) {
                 }
                 user.password = req.body.password;
                 user.resetPasswordToken = undefined;
-                user.resetPasswordExpires = undefined;                                
+                user.resetPasswordExpires = undefined;
                 user.save(function(err) {
                     let userCleansed = _.omit(user.toObject(), [
                         'salt',
                         'hashed_password'
-                    ]);                                        
+                    ]);
 
-                    req.redirect = req.body.hasOwnProperty('redirect') 
-                                    && req.body.redirect !== false 
+                    req.redirect = req.body.hasOwnProperty('redirect')
+                                    && req.body.redirect !== false
                                     && (payload.redirect = req.body.redirect);
 
                     MeanUser.events.emit('reset_password', {
@@ -505,10 +534,10 @@ module.exports = function(MeanUser) {
                         user: {
                             name: user.name
                         }
-                    });                    
+                    });
                     req.logIn(userCleansed, function(err) {
                         if (err) return next(err);
-                        req.user = user;                        
+                        req.user = user;
                         next();
                     });
                 });

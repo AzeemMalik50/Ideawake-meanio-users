@@ -26,6 +26,7 @@ var MeanUser = new MeanUserKlass();
  */
 MeanUser.register(function(app, database, passport, socketshelper) {
     MeanUser.io = socketshelper.io;
+    MeanUser.controller = require('./server/controllers/users')(MeanUser);
     MeanUser.auth = require('./authorization');
     require('./passport')(passport);
 

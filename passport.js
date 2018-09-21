@@ -15,6 +15,9 @@ var mongoose = require('mongoose'),
 
   //platformSettings = require('meanio').getPlatformSettings();
 
+const AzureOAuth2Strategy  = require('passport-azure-oauth2');
+const jwt = require('jsonwebtoken');
+
 module.exports = function(passport) {
   // Serialize the user id to push into the session
   passport.serializeUser(function(user, done) {
@@ -269,6 +272,25 @@ module.exports = function(passport) {
 
     return done(null, userProfile);
   }));
+
+
+  // =================================================
+
+  passport.use('azure-oauth', new AzureOAuth2Strategy({
+	  clientID: config.strategies.azure.clientID,
+	  clientSecret: config.strategies.azure.clientSecret,
+	  callbackURL: config.strategies.azure.callbackUri,
+	  resource: config.strategies.azure.clientID,
+	  tenant: config.strategies.azure.tenant,
+	  state: false
+	},
+	function (accessToken, refreshtoken, params, profile, done) {
+	  var user = jwt.decode(params.id_token, "", true);
+	  done(null, user);
+	}));
+
+  // =================================================
+
 
     var db = mongoose.connection;
     var collection = db.collection('platformsettings');

@@ -91,6 +91,23 @@ module.exports = function (MeanUser, app, circles, database, passport) {
   );
 
   // =======================================
+  
+  // ============ AZURE OAUTH ENDPOINTS ===========
+
+  app.route('/api/oauth/azure').get(
+    passport.authenticate('azure-oauth')
+  );
+
+  app.route('/api/oauth/azure/callback').get(
+    passport.authenticate('azure-oauth'),
+    MWs.SAMLAuthorization,
+    authTokenMW(MeanUser),
+    (req, res) => {
+      res.redirect(`/saml/auth?t=${req.token}&n=${!!req.isUserNew}&semail=${req.showSecondaryEmailPage}`);
+    }
+  );
+
+  // =======================================
 
 
   app.route('/api/verifyToken')

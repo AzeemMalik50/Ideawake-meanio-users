@@ -400,6 +400,7 @@ module.exports = function(MeanUser) {
           const searchText = req.body.searchText || "";
           const roles = req.body.roles;
           const usernames = req.body.usernames;
+          const allowSelf = req.body.allowSelf;
 					
 					if (searchText) {
             const regex = new RegExp(searchText,"gi");
@@ -422,11 +423,13 @@ module.exports = function(MeanUser) {
             }
           }
 
-					//exclude current loggedIn user as well the user sent from front-end
-          exclude.push(req.user._id);           
-          filters["_id"] = {
-            "$nin": exclude
-          };					
+          if (!allowSelf) {
+            //exclude current loggedIn user as well the user sent from front-end
+            exclude.push(req.user._id);
+            filters["_id"] = {
+                "$nin": exclude
+            };
+          }          					
 
 					User.find(filters)
             .lean()

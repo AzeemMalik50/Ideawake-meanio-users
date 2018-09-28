@@ -399,6 +399,7 @@ module.exports = function(MeanUser) {
 					const filters = {};
           const searchText = req.body.searchText || "";
           const roles = req.body.roles;
+          const usernames = req.body.usernames;
 					
 					if (searchText) {
             const regex = new RegExp(searchText,"gi");
@@ -412,6 +413,12 @@ module.exports = function(MeanUser) {
           if (roles && roles.length) {
             filters['roles'] = {
               $in: roles
+            }
+          }
+
+          if (usernames && usernames.length) {
+            filters['username'] = {
+              $in: usernames
             }
           }
 

@@ -406,7 +406,8 @@ module.exports = function(MeanUser) {
             const regex = new RegExp(searchText,"gi");
 						filters['$or'] = [
               { name: regex },
-              { email: regex }
+              { email: regex },
+              { username: regex }
 						];
 					}		      
           

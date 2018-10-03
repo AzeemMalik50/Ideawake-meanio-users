@@ -155,15 +155,23 @@ exports.validateRefreshToken = function(req, res, next) {
 
 exports.SAMLAuthorization = function(req, res, next) {
   let Invite = mongoose.model('Invite');
-  const { invitationId } = 
-    req.body && req.body.RelayState 
-    ? JSON.parse(req.body.RelayState)
-    : {};    
+
+  // AdFS/Okta RelayState and oAuth state param to get invitationId
+  let stateInvitation = {};
+  if (req.body && req.body.RelayState) {
+    stateInvitation = JSON.parse(req.body.RelayState);
+  }
+  
+  if (req.query && req.query.state) {
+    stateInvitation = JSON.parse(req.query.state);
+  }
+  const { invitationId } = stateInvitation;
+  
   let email = (
     req.user.emailaddress || req.user.email ||
     req.user.emailAddress || req.user.upn || req.user.nameID
   ).toLowerCase();
-
+  
   User.findOneUser({ email }, true)
     .then(user => {
       if (!user) {

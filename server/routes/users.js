@@ -72,7 +72,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     // Reference Link: 
     //https://stackoverflow.com/questions/24601188/how-do-i-redirect-back-to-the-originally-requested-url-after-authentication-with/46555155#46555155
     if (req.query && req.query.inv) {
-      req.query.RelayState = JSON.stringify({ invitationId: req.query.inv });
+      req.query.RelayState = JSON.stringify({ invitationId: req.query.inv });      
     }
 
     passport.authenticate('saml', {
@@ -94,9 +94,15 @@ module.exports = function (MeanUser, app, circles, database, passport) {
   
   // ============ AZURE OAUTH ENDPOINTS ===========
 
-  app.route('/api/oauth/azure').get(
-    passport.authenticate('azure-oauth')
-  );
+  app.route('/api/oauth/azure')    
+  .get(function(req, res, next) {
+    // In oauth we can use state param to keey track of invitationId
+    const params = {};
+    if (req.query && req.query.inv) {
+      params.state = JSON.stringify({ invitationId: req.query.inv });
+    }
+    passport.authenticate('azure-oauth', params)(req, res, next);
+  });
 
   app.route('/api/oauth/azure/callback').get(
     passport.authenticate('azure-oauth'),

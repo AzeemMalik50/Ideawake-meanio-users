@@ -401,6 +401,7 @@ module.exports = function(MeanUser) {
           const roles = req.body.roles;
           const usernames = req.body.usernames;
           const allowSelf = req.body.allowSelf;
+          const paginate = typeof req.body.paginate === 'undefined' ? true : req.body.paginate;
 					
 					if (searchText) {
             const regex = new RegExp(searchText,"gi");
@@ -432,12 +433,15 @@ module.exports = function(MeanUser) {
             };
           }          					
 
-					User.find(filters)
+					const query = User.find(filters)
             .lean()
             .select("username name email")
-						.sort('name')
-						.skip(skip)
-						.limit(limit)
+            .sort('name');
+            if (paginate) {
+              query.skip(skip)
+						  .limit(limit);
+            }
+						query
 						.exec()
 						.then(users => res.json({ users }))
 						.catch(err => console.log(`Error: ${err}`));

@@ -301,6 +301,12 @@ UserSchema.pre('save', function(next) {
   if (!self.username) {
     self.username = this.email.split('@')[0];
   }
+
+  // if it is new record send welcome email
+  if (this.isNew) {
+    this.sendWelcomeEmail();
+  }
+
   next();
 
 });

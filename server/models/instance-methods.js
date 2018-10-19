@@ -89,7 +89,7 @@ module.exports = {
           hostname: config.hostname
         };
         const mailOptions = {
-          to: this.email,
+          to: this.secondaryEmail || this.email,
           from: config.emailFrom,
           subject: 'Welcome to Ideawake'
         };

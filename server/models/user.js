@@ -301,10 +301,21 @@ UserSchema.pre('save', function(next) {
   if (!self.username) {
     self.username = this.email.split('@')[0];
   }
-
   // if it is new record send welcome email
-  if (this.isNew) {
-    this.sendWelcomeEmail();
+  if (this.isNew) {    
+    const PlatformSettings = mongoose.model('PlatformSetting');
+    PlatformSettings.findOne({})
+      .then(settings => {
+        if (
+          !settings.useUserSecondaryEmail
+          || ( settings.useUserSecondaryEmail && this.secondaryEmail )
+        ) {
+          this.sendWelcomeEmail();
+        }
+      })
+      .catch(err => {
+        console.log('Error in fetching platform settings for welcome email');
+      });
   }
 
   next();

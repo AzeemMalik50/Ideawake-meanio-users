@@ -550,6 +550,11 @@ module.exports = function(MeanUser) {
                 });
                 res.json(response);
             });
+        },
+
+        sendWelcomeEmail: function (req, res) {
+            req.user.sendWelcomeEmail();
+            res.json({ status: true});
         }
     };
 }

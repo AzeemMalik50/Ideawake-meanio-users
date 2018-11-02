@@ -332,12 +332,16 @@ module.exports = function(MeanUser) {
 					const filters = {};
           const searchText = req.body.searchText || "";
           const roles = req.body.roles;
+          const usernames = req.body.usernames;
+          const allowSelf = req.body.allowSelf;
+          const paginate = typeof req.body.paginate === 'undefined' ? true : req.body.paginate;
 					
 					if (searchText) {
             const regex = new RegExp(searchText,"gi");
 						filters['$or'] = [
               { name: regex },
-              { email: regex }
+              { email: regex },
+              { username: regex }
 						];
 					}		      
           
@@ -348,18 +352,29 @@ module.exports = function(MeanUser) {
             }
           }
 
-					//exclude current loggedIn user as well the user sent from front-end
-          exclude.push(req.user._id);           
-          filters["_id"] = {
-            "$nin": exclude
-          };					
+          if (usernames && usernames.length) {
+            filters['username'] = {
+              $in: usernames
+            }
+          }
 
-					User.find(filters)
+          if (!allowSelf) {
+            //exclude current loggedIn user as well the user sent from front-end
+            exclude.push(req.user._id);
+            filters["_id"] = {
+                "$nin": exclude
+            };
+          }          					
+
+					const query = User.find(filters)
             .lean()
             .select("username name email")
-						.sort('name')
-						.skip(skip)
-						.limit(limit)
+            .sort('name');
+            if (paginate) {
+              query.skip(skip)
+						  .limit(limit);
+            }
+						query
 						.exec()
 						.then(users => res.json({ users }))
 						.catch(err => console.log(`Error: ${err}`));

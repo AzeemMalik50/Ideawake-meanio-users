@@ -105,6 +105,24 @@ module.exports = function (MeanUser, app, circles, database, passport) {
   });
 
   app.route('/api/oauth/azure/callback').get(
+    (req, res, next) => {
+      const { error_description } = req.query;
+      if (error_description) {
+        const errDescArr = error_description.split(':');
+        const errorCode = errDescArr[0];
+        switch (errorCode) {
+          case 'AADSTS90008': {
+            res.redirect('/auth/login');
+            break;
+          }
+          default: {
+            next();
+          }
+        }
+      } else {
+        next();
+      }
+    },
     passport.authenticate('azure-oauth'),
     MWs.SAMLAuthorization,
     authTokenMW(MeanUser),

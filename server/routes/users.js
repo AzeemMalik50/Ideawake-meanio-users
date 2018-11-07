@@ -104,7 +104,32 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     passport.authenticate('azure-oauth', params)(req, res, next);
   });
 
-  app.route('/api/oauth/azure/callback').get(
+  app.route('/api/oauth/azure/callback').get(    
+    (req, res, next) => {
+      /**
+       * This WM checks if there is an error in query params related to User's Consent and App permissions.
+       * Because, on Azure level, the user gives consent to required permissions by clicking Accept button
+       * But Azure still gives error on the callback. If you reload the and try to login again this time no error
+       * is given.
+       * Probably in first time, Azure sends back response before updating settings for user consent.
+       */
+      const { error_description } = req.query;
+      if (error_description) {
+        const errDescArr = error_description.split(':');
+        const errorCode = errDescArr[0];
+        switch (errorCode) {
+          case 'AADSTS90008': {
+            res.redirect('/auth/login');
+            break;
+          }
+          default: {
+            next();
+          }
+        }
+      } else {
+        next();
+      }
+    },
     passport.authenticate('azure-oauth'),
     MWs.SAMLAuthorization,
     authTokenMW(MeanUser),

@@ -86,6 +86,10 @@ var UserProfileSchema = new Schema({
       type: Boolean,
       default: true
     },
+    'newIdeasUpdateEmail': {
+      type: Boolean,
+      default: true
+    },
     'userDigestLastSent': {
       type: Date
     }

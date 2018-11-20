@@ -11,9 +11,11 @@ var mongoose = require('mongoose'),
   crypto = require('crypto'),  
   templates = require('../template'),
   _ = require('lodash'),
-  jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
+  jwt = require('jsonwebtoken'),
+  mailer; //https://npmjs.org/package/node-jsonwebtoken
 
-const { sendByTemplate }  = require('../services/send-email');
+// Temporary work-around for circular dependency
+setTimeout(() => mailer = require('../../../../services/mailer')(), 2000);
 
 function createUserProfile(user, callback) {
     UserProfile.find({'user' : user._id}).exec(function(err, results){
@@ -534,7 +536,7 @@ module.exports = function(MeanUser) {
                       from: config.emailFrom,
                       subject: 'Ideawake - changing your password'
                     };
-                    sendByTemplate(template, context, mailOptions, function(err){
+                    mailer.sendTemplateDb(template, context, mailOptions, function(err){
                       if (err) {
                         done(err);
                       }else {

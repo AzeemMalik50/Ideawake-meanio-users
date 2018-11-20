@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const { sendByTemplate }  = require('../services/send-email');
 const config = require('meanio').getConfig();
+
+var mailer;
+
+// Temporary work-around for circular dependency
+setTimeout(() => mailer = require('../../../../services/mailer')(), 2000);
 
 module.exports = {
   /**
@@ -73,33 +77,19 @@ module.exports = {
   },
 
   sendWelcomeEmail: function () {
-    const Idea = mongoose.model('Idea');
-    Idea.find()
-      .sort({
-        'upVoteCount': -1,
-        'commentCount': -1
-      })
-      .limit(3)
-      .exec()
-      .then(ideas => {        
-        const template = "welcome-email";
-        const context = {
-          name: this.name,
-          ideas,
-          hostname: config.hostname
-        };
-        const mailOptions = {
-          to: this.secondaryEmail || this.email,
-          from: config.emailFrom,
-          subject: 'Welcome to Ideawake'
-        };
-        sendByTemplate(template, context, mailOptions, function (err) {
-          if (err)
-            console.log(`Error in sending welcome email: ${err.toString()}`);
-        })
-      })
-      .catch(err => {
-        console.log(`Error in sending welcome email: ${err.toString()}`)
-      });  
+    const template = "welcome-email";
+    const context = {
+      user: { name: this.name },
+      hostname: config.hostname
+    };
+    const mailOptions = {
+      to: this.secondaryEmail || this.email,
+      from: config.emailFrom,
+      subject: 'Welcome to Ideawake'
+    };
+    mailer.sendTemplateDb(template, context, mailOptions, function (err) {
+      if (err)
+        console.log(`Error in sending welcome email: ${err.toString()}`);
+    });
   }
 };

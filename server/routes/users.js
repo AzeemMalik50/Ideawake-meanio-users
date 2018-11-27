@@ -320,5 +320,4 @@ module.exports = function (MeanUser, app, circles, database, passport) {
   }
 
   app.post('/api/users/search', users.search);
-  app.post('/api/users/send-welcome-email', users.sendWelcomeEmail);
 };

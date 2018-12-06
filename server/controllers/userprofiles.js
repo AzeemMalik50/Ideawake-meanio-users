@@ -218,7 +218,8 @@ module.exports = function(UserProfiles, http) {
                 req.body.userProfile = _.omit(req.body.userProfile, ['__v']);
                 userProfile = _.extend(userProfile, req.body.userProfile);
 
-                //req.log.info(userProfile);                
+                //req.log.info(userProfile);
+
                 userProfile.save(function(err) {
                     if (err) {
                         return res.status(500).json({
@@ -249,9 +250,8 @@ module.exports = function(UserProfiles, http) {
                                 if(err) {
                                     req.log.info(err);
                                 }
-                                
                                 if (req.body.sendWelcomeEmail) {
-                                  user.sendWelcomeEmail();
+                                    user.sendWelcomeEmail();
                                 }
                             });
 

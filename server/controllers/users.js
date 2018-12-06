@@ -8,7 +8,9 @@ var mongoose = require('mongoose'),
   UserProfile = mongoose.model('UserProfile'),
   async = require('async'),
   config = require('meanio').getConfig(),
-  crypto = require('crypto'),  
+  crypto = require('crypto'),
+  nodemailer = require('nodemailer'),
+  mandrillTransport = require('nodemailer-mandrill-transport'),
   templates = require('../template'),
   _ = require('lodash'),
   jwt = require('jsonwebtoken'),
@@ -567,11 +569,6 @@ module.exports = function(MeanUser) {
                 });
                 res.json(response);
             });
-        },
-
-        sendWelcomeEmail: function (req, res) {
-            req.user.sendWelcomeEmail();
-            res.json({ status: true});
         }
     };
 }

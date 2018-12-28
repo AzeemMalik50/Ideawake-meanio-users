@@ -539,7 +539,7 @@ module.exports = function(MeanUser) {
                       subject: 'Ideawake - changing your password'
                     };
                     mailer.sendTemplate(template, context, mailOptions, function(err){
-                      if (err.messageId) {
+                      if (err.messageId) { //we will change this in future, this is just a workaround because we are using this function in a lot of places and will have repurcussions.
                         done(null, user);
                       }else {
                         done(err);

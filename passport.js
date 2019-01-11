@@ -233,14 +233,13 @@ module.exports = function(passport) {
     issuer: config.strategies.saml.issuer,
     callbackUrl: config.strategies.saml.callbackUrl,
     // TODO: confirm if the following three settings are necessary for any use-case
-    // privateCert:  fs.readFileSync(onfig.strategies.saml.privateCert'./cert-scripts/azeem_com.key', 'utf-8'),
-    // cert: fs.readFileSync(onfig.strategies.saml.cert './cert-scripts/adfs.ideawake_com_pk.crt', 'utf-8'),
+    privateCert: config.strategies.saml.privateCert,
+    cert: config.strategies.saml.cert,
     // authnContext: 'http://schemas.microsoft.com/ws/2008/06/identity/authenticationmethod/password',
     acceptedClockSkewMs: -1,
     identifierFormat: null,
-    signatureAlgorithm: config.strategies.saml.callbackUrl.signatureAlgorithm,
-    disableRequestedAuthnContext: true,
-    cert: config.strategies.saml.cert
+    signatureAlgorithm: config.strategies.saml.signatureAlgorithm,
+    disableRequestedAuthnContext: true
   },
   function(profile, done) {
     let claim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';

@@ -89,7 +89,7 @@ module.exports = {
     };
     mailer.sendTemplateDb(template, context, mailOptions, function (err) {
       if (err)
-        console.log(`Error in sending welcome email: ${err.toString()}`);
+        console.log(`Error in sending welcome email: ${err}`);
     });
   }
 };

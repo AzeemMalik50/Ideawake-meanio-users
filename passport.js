@@ -243,6 +243,7 @@ module.exports = function(passport) {
     cert: config.strategies.saml.cert
   },
   function(profile, done) {
+    console.log('Start: Processing SAML parsed data from SSO provider.');
     let claim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';
     let props = [
       'upn', // adfs
@@ -269,7 +270,8 @@ module.exports = function(passport) {
     profile.firstName && (
       userProfile.name = `${profile.firstName} ${profile.lastName || ''}`
     );
-
+    
+    console.log('Done: Processing SAML parsed data from SSO provider.');
     return done(null, userProfile);
   }));
 

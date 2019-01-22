@@ -173,7 +173,13 @@ exports.SAMLAuthorization = function(req, res, next) {
     req.user.emailaddress || req.user.email ||
     req.user.emailAddress || req.user.upn || req.user.nameID
   ).toLowerCase();
-  
+
+  if (!email) {
+    return next(new Error(
+      `No identifiable user property returned by SAML provider.`
+    ));
+  }
+
   User.findOneUser({ email }, true)
     .then(user => {
       if (!user) {

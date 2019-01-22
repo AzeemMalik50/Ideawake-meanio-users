@@ -253,6 +253,9 @@ module.exports = function(passport) {
       'nameID' // okta
     ];
 
+    // TODO remove when prohealth's issue gets resolved
+    console.log('SAML SSO User Data:', profile);
+
     let userProfile = {};
 
     props.forEach(prop => {

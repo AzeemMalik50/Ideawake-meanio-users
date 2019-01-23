@@ -297,12 +297,22 @@ UserSchema.pre('save', function(next) {
   if (this.isNew && this.provider === 'local' && this.password && !this.password.length) {
     return next(new Error('Invalid password'));
   }
-  // generate username from email
-  if (!self.username) {
-    self.username = this.email.split('@')[0];
-  }
+  
   // if it is new record send welcome email
-  if (this.isNew) {    
+  if (this.isNew) {
+    // generate username from email
+    if (!self.username) {
+      let username = this.email.split('@')[0];
+      mongoose.model('User').count({username}).exec()
+        .then(count => {
+          if (count) username = `${username}_${count}`;
+          self.username = username;
+
+          next();
+        })
+        .catch(err => next(err));
+    }
+
     const PlatformSettings = mongoose.model('PlatformSetting');
     PlatformSettings.findOne({})
       .then(settings => {
@@ -316,9 +326,9 @@ UserSchema.pre('save', function(next) {
       .catch(err => {
         console.log('Error in fetching platform settings for welcome email');
       });
+  } else {
+    next();
   }
-
-  next();
 });
 
 UserSchema.methods = require('./instance-methods');

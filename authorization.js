@@ -207,8 +207,7 @@ exports.SAMLAuthorization = function(req, res, next) {
             req.isUserNew = true;
             return User.createUser(newUser, function(errors, user) {
               if (errors && errors.length) {
-                let err = errors[0];
-                err.message = err.msg;
+                let err = new Error(errors[0].msg);
                 next(err);
               } else {
                 req.user = user;                

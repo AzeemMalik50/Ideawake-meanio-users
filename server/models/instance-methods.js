@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const config = require('meanio').getConfig();
+const error = require('http-errors-promise');
 
 var mailer;
 
@@ -91,5 +92,41 @@ module.exports = {
       if (err)
         console.log('Error in sending welcome email', err);
     });
+  },
+
+  getProfileWidgetInfo: function() {
+    let profilePromise = Promise.resolve();
+
+    if (!this.userProfile.id) {
+      profilePromise = this.populate('userProfile').execPopulate();
+    }
+
+    return profilePromise
+      .then(() => {
+        const Ideas = mongoose.model('Idea');
+        const Notifications = mongoose.model('Notification');
+
+        return Promise.all([
+          Ideas.count({
+            user: this._id,
+            deleted: false
+          }).exec(),
+          Notifications.count({
+            user: this._id,
+            todo: true,
+            deleted: false,
+            todoCompleted: false
+          }).exec()
+        ])
+          .then(([ideasCount, todosCount]) => {
+            return {
+              ...this._doc,
+              ideasCount,
+              todosCount
+            };
+          })
+          .catch(err => error(err, 'Error getting counts for profile widget.'));
+      })
+      .catch(err => error(err, 'Error populating userProfile info.'));
   }
 };

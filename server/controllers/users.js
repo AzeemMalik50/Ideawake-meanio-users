@@ -16,6 +16,8 @@ var mongoose = require('mongoose'),
   jwt = require('jsonwebtoken'),
   mailer; //https://npmjs.org/package/node-jsonwebtoken
 
+  const error = require('http-errors-promise');
+
 // Temporary work-around for circular dependency
 setTimeout(() => mailer = require('../../../../services/mailer')(), 2000);
 
@@ -574,6 +576,13 @@ module.exports = function(MeanUser) {
         sendWelcomeEmail: function (req, res) {
             req.user.sendWelcomeEmail();
             res.json({ status: true});
+        },
+
+        profileWidgetInfo: function(req, res) {
+            if (!req.user) return res.status(401).end();
+            req.user.getProfileWidgetInfo()
+                .then(info => res.json(info))
+                .catch(err => error.respond(res, err, 'Error fetching profile widget info'));
         }
     };
 }

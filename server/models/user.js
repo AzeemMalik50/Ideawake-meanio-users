@@ -297,84 +297,40 @@ UserSchema.pre('save', function(next) {
   if (this.isNew && this.provider === 'local' && this.password && !this.password.length) {
     return next(new Error('Invalid password'));
   }
-  // generate username from email
-  if (!self.username) {
-    self.username = this.email.split('@')[0];
-  }
-  next();
+  
+  // if it is new record send welcome email
+  if (this.isNew) {
+    // generate username from email
+    if (!self.username) {
+      let username = this.email.split('@')[0];
+      mongoose.model('User').count({username}).exec()
+        .then(count => {
+          if (count) username = `${username}_${count}`;
+          self.username = username;
 
+          next();
+        })
+        .catch(err => next(err));
+    }
+
+    const PlatformSettings = mongoose.model('PlatformSetting');
+    PlatformSettings.findOne({})
+      .then(settings => {
+        if (
+          !settings.useUserSecondaryEmail
+          || ( settings.useUserSecondaryEmail && this.secondaryEmail )
+        ) {
+          this.sendWelcomeEmail();
+        }
+      })
+      .catch(err => {
+        console.log('Error in fetching platform settings for welcome email');
+      });
+  } else {
+    next();
+  }
 });
 
-/**
- * Methods
- */
-
-/**
- * HasRole - check if the user has required role
- *
- * @param {String} plainText
- * @return {Boolean}
- * @api public
- */
-UserSchema.methods.hasRole = function(role) {
-  var roles = this.roles;
-  return roles.indexOf('admin') !== -1 || roles.indexOf(role) !== -1;
-};
-
-/**
- * IsAdmin - check if the user is an administrator
- *
- * @return {Boolean}
- * @api public
- */
-UserSchema.methods.isAdmin = function() {
-  return this.roles.indexOf('admin') !== -1;
-};
-
-/**
- * Authenticate - check if the passwords are the same
- *
- * @param {String} plainText
- * @return {Boolean}
- * @api public
- */
-UserSchema.methods.authenticate = function(plainText) {
-  return this.hashPassword(plainText) === this.hashed_password;
-};
-
-/**
- * Make salt
- *
- * @return {String}
- * @api public
- */
-UserSchema.methods.makeSalt = function() {
-  return crypto.randomBytes(16).toString('base64');
-};
-
-/**
- * Hash password
- *
- * @param {String} password
- * @return {String}
- * @api public
- */
-UserSchema.methods.hashPassword = function(password) {
-  if (!password || !this.salt) return '';
-  var salt = new Buffer(this.salt, 'base64');
-  return crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('base64');
-};
-
-/**
- * Hide security sensitive fields
- *
- * @returns {*|Array|Binary|Object}
- */
-UserSchema.methods.toJSON = function() {
-  var obj = this.toObject();
-  delete obj.hashed_password;
-  delete obj.salt;
-  return obj;
-};
+UserSchema.methods = require('./instance-methods');
 
 mongoose.model('User', UserSchema);

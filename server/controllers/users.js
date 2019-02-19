@@ -216,11 +216,11 @@ module.exports = function(MeanUser) {
                     req.assert('email', 'You must enter a valid email address').isEmail();
                     req.assert('password', 'Password must be between 6-100 characters long').len(6, 100);
                     // req.assert('username', 'Username cannot be more than 20 characters').len(1, 20);
-                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);                    
+                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
 
 
                     var errors = req.validationErrors();
-                    
+
                     const platFormEmailDomains = platformSettings.emailDomains;
                     if (platFormEmailDomains && platFormEmailDomains.length) {
                         const emailDomain = req.body.email.split('@').pop();
@@ -339,7 +339,7 @@ module.exports = function(MeanUser) {
           const usernames = req.body.usernames;
           const allowSelf = req.body.allowSelf;
           const paginate = typeof req.body.paginate === 'undefined' ? true : req.body.paginate;
-					
+
 					if (searchText) {
             const regex = new RegExp(searchText,"gi");
 						filters['$or'] = [
@@ -347,9 +347,9 @@ module.exports = function(MeanUser) {
               { email: regex },
               { username: regex }
 						];
-					}		      
-          
-          
+					}
+
+
           if (roles && roles.length) {
             filters['roles'] = {
               $in: roles
@@ -368,7 +368,7 @@ module.exports = function(MeanUser) {
             filters["_id"] = {
                 "$nin": exclude
             };
-          }          					
+          }
 
 					const query = User.find(filters)
             .lean()
@@ -538,29 +538,22 @@ module.exports = function(MeanUser) {
                       from: config.emailFrom,
                       subject: 'Ideawake - changing your password'
                     };
-                    mailer.sendTemplateDb(template, context, mailOptions, function(err){
-                      if (err) {
-                        done(err);
-                      }else {
+                    mailer.sendTemplate(template, context, mailOptions, function(err){
+                      if (err.messageId) { //we will change this in future, this is just a workaround because we are using this function in a lot of places and will have repurcussions.
                         done(null, user);
+                      }else {
+                        done(err);
                       }
-                    });                                        
+                    });
                 }
             ],
             function(err, user) {
 
-                var response = {
-                    message: `An email has been sent to the email address you provided below. 
-                        Please check your email to reset your password.`,
+                const response = {
+                    message: 'Please check your email for instructions on how to reset your password.',
                     status: 'success'
                 };
-                if (err) {
-                    response.message = `Oops! There is no user registered with this email, 
-                        please make sure that the email you entered is correct. 
-                        If you continue having trouble, please 
-                        <a href="${config.hostname}/contact">contact support</a>`;
-                    response.status = 'danger';
-                }
+
                 MeanUser.events.emit('forgot_password', {
                     action: 'forgot_password',
                     user: {
@@ -569,6 +562,11 @@ module.exports = function(MeanUser) {
                 });
                 res.json(response);
             });
+        },
+
+        sendWelcomeEmail: function (req, res) {
+            req.user.sendWelcomeEmail();
+            res.json({ status: true});
         }
     };
 }

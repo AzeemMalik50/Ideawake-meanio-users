@@ -250,6 +250,9 @@ module.exports = function(UserProfiles, http) {
                                 if(err) {
                                     req.log.info(err);
                                 }
+                                if (req.body.sendWelcomeEmail) {
+                                    user.sendWelcomeEmail();
+                                }
                             });
 
                         // }

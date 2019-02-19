@@ -73,8 +73,7 @@ exports.isMongoId = function(req, res, next) {
 exports.generateAuthToken = function(MeanUser) {
   return (req, res, next) => {
     try {
-      console.log(`generateAuthToken req.user ${req.user} vs req.user._doc ${req.user._doc}`);
-      console.log(`generateAuthToken req.user.userProfile ${req.user.userProfile}`);
+      console.log(`Start: generateAuthToken req.user ${req.user.email}`);
 
       // Using user.toObject() here otherwise removing stuff like 'pointsLog'
       // from the object still leaves it under user.userProfile._doc.pointsLog
@@ -102,8 +101,10 @@ exports.generateAuthToken = function(MeanUser) {
 
       req.token = jwt.sign(payload, config.secret, {expiresIn: config.tokenExpiry});
 
+      console.log(`Done: generateAuthToken req.user ${req.user.email}`);
       next();
     } catch (err) {
+      console.log(`Error: generateAuthToken req.user ${req.user.email}`);
       next(err);
     }
   }
@@ -154,6 +155,7 @@ exports.validateRefreshToken = function(req, res, next) {
 
 
 exports.SAMLAuthorization = function(req, res, next) {
+  console.log('Start: finding user for SSO.');
   let Invite = mongoose.model('Invite');
 
   // AdFS/Okta RelayState and oAuth state param to get invitationId
@@ -171,7 +173,13 @@ exports.SAMLAuthorization = function(req, res, next) {
     req.user.emailaddress || req.user.email ||
     req.user.emailAddress || req.user.upn || req.user.nameID
   ).toLowerCase();
-  
+
+  if (!email) {
+    return next(new Error(
+      `No identifiable user property returned by SAML provider.`
+    ));
+  }
+
   User.findOneUser({ email }, true)
     .then(user => {
       if (!user) {
@@ -199,8 +207,7 @@ exports.SAMLAuthorization = function(req, res, next) {
             req.isUserNew = true;
             return User.createUser(newUser, function(errors, user) {
               if (errors && errors.length) {
-                let err = errors[0];
-                err.message = err.msg;
+                let err = new Error(errors[0].msg);
                 next(err);
               } else {
                 req.user = user;                
@@ -219,7 +226,8 @@ exports.SAMLAuthorization = function(req, res, next) {
             });
           })
       } else {
-        req.user = user;    
+        req.user = user;
+        console.log('Done: finding user for SSO.');
         next();
       }
     }).catch(err => {

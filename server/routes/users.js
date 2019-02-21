@@ -164,6 +164,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     // Setting up the users api
     app.route('/api/register')
       .post(
+        MWs.passwordValidation,
         users.create,
         authTokenMW(MeanUser),
         MWs.generateRefreshToken,
@@ -184,6 +185,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     app.route('/api/reset/:token')
       .get(users.checkResetToken)
       .post(
+        MWs.passwordValidation,
         users.resetpassword,
         authTokenMW(MeanUser),
         MWs.generateRefreshToken,

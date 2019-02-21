@@ -242,7 +242,7 @@ exports.SAMLAuthorization = function(req, res, next) {
 exports.passwordValidation = function(req, res, next) {
   if (req.body && req.body.password) {
     const { password } = req.body;
-    const policy = cache.getSync('password-policy');
+    const policy = cache.getSync('password-policy') || {};
 
     if (policy.enableSpecialChars) {
       const regex = new RegExp(

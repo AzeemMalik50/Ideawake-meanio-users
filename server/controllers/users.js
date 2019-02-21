@@ -462,7 +462,6 @@ module.exports = function(MeanUser) {
                         msg: 'Token invalid or expired'
                     });
                 }
-                req.assert('password', 'Password must be between 8-20 characters long').len(8, 20);
                 req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
                 var errors = req.validationErrors();
                 if (errors) {

@@ -164,6 +164,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     // Setting up the users api
     app.route('/api/register')
       .post(
+        MWs.passwordValidation,
         users.create,
         authTokenMW(MeanUser),
         MWs.generateRefreshToken,

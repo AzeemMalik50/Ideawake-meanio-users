@@ -147,6 +147,8 @@ angular.module('mean.users')
         if (!MeanUser.passwordErrorForReset) {
           vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
         }
+
+        vm.passwordErrorForReset = MeanUser.passwordErrorForReset
         if (MeanUser.passwordErrorForReset && MeanUser.passwordErrorForReset.message) {
           vm.passwordErrorForReset = MeanUser.passwordErrorForReset.message;
         }

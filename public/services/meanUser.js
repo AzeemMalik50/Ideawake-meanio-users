@@ -141,6 +141,7 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       this.validationError = response.msg;
       if(Object.prototype.toString.call( response ) === '[object Array]') {
         this.resetpassworderror = response[0].msg;
+        this.passwordErrorForReset = response[0].msg;
         $rootScope.$emit('resetpasswordfailed');
       }
       $rootScope.$emit('loginfailed');

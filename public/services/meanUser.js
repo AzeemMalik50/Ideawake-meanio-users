@@ -137,13 +137,16 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       $location.path(response.redirect);
       this.loginError = 'Email or password incorrect, please try again.';
       this.registerError = response;
+      this.passwordErrorForReset = response;
       this.validationError = response.msg;
       if(Object.prototype.toString.call( response ) === '[object Array]') {
         this.resetpassworderror = response[0].msg;
+        this.passwordErrorForReset = response[0].msg;
         $rootScope.$emit('resetpasswordfailed');
       }
       $rootScope.$emit('loginfailed');
       $rootScope.$emit('registerfailed');
+      $rootScope.$emit('resetpassworderror');
     };
 
     // adfs error handling

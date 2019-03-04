@@ -5,6 +5,8 @@ var mongoose = require('mongoose'),
   _ = require('lodash'),
   refreshTokens = {};
 
+const error = require('http-errors-promise');
+const cache = require('cache-flex');
 
 var findUser = exports.findUser = function(id, cb) {
   User.findOne({
@@ -235,3 +237,54 @@ exports.SAMLAuthorization = function(req, res, next) {
       next(err);
     });
 };
+
+
+exports.passwordValidation = function(req, res, next) {
+  if (req.body && req.body.password) {
+    const { password } = req.body;
+    const policy = cache.getSync('password-policy') || {};
+
+    if (policy.enableSpecialChars) {
+      const regex = new RegExp(
+        `[ !@#$%^&*()_+\\-=\\[\\]{};':"\\\|,.<>\\/?]`, 'g'
+      );
+
+      if ((password.match(regex) || []).length < policy.minSpecialChars) {
+        return error.respond(
+          res,
+          null,
+          `There should be at least ${policy.minSpecialChars} special characters in the password.`,
+          400
+        );
+      }
+    }
+
+    if (policy.enableCapitals) {
+      const regex = new RegExp('[A-Z]', 'g');
+
+      if ((password.match(regex) || []).length < policy.minCapitals) {
+        return error.respond(
+          res,
+          null,
+          `There must be at least ${policy.minCapitals} capital letters in the password.`,
+          400
+        );
+      }
+    }
+
+    if (policy.enableLength) {
+      if (password.length < policy.minLength) {
+        return error.respond(
+          res,
+          null,
+          `The password must be at least ${policy.minLength} characters long`,
+          400
+        );
+      }
+    }
+
+    next();
+  } else {
+    next(error(null, "No password in body.", 400, true));
+  }
+}

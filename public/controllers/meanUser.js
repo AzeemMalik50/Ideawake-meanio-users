@@ -144,7 +144,14 @@ angular.module('mean.users')
         MeanUser.resetpassword(this.user);
       };
       $rootScope.$on('resetpassworderror', function () {
-        vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
+        if (!MeanUser.passwordErrorForReset) {
+          vm.resetpassworderror = $sce.trustAsHtml('This link has expired. Please go to the <a href="/forgotpassword">reset password</a> page and enter your email to get a new link');
+        }
+
+        vm.passwordErrorForReset = MeanUser.passwordErrorForReset
+        if (MeanUser.passwordErrorForReset && MeanUser.passwordErrorForReset.message) {
+          vm.passwordErrorForReset = MeanUser.passwordErrorForReset.message;
+        }
       });
     }
   ]).controller('SamlAuth', ['MeanUser', '$rootScope', '$sce', '$location', '$cookies', '$http',

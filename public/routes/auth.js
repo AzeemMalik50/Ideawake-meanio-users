@@ -27,8 +27,8 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
         var rft = localStorage.getItem('rft');
         var user;
 
-        const loggedOutUrls = ['/signup', '/auth/login', '/forgotpassword'];
-        if (!lcJwt && !_.includes(loggedOutUrls, $location.$$path) && !$location.$$path.includes('/reset')) {
+        const loggedOutUrls = ['/', '/signup', '/auth/login', '/forgotpassword', '/privacy', '/tos', '/contact'];
+        if (!lcJwt && !_.includes(loggedOutUrls, $location.$$path) && !$location.$$path.includes('/reset') && !$location.$$path.includes('/invite/accept')) {
           clearTokensAndRedirectToLogin($location);
           return;
         }

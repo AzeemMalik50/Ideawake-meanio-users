@@ -257,7 +257,7 @@ UserSchema.statics.createUser = function(userData, done) {
       return done(err);
     }
 
-    createUserProfile(user, function(userProfile) {
+    createUserProfile(userData, function(userProfile) {
       user.userProfile = userProfile._id;
       user.save()
       .catch(err => console.log('error updating user\'s profile id.', err))

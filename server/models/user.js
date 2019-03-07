@@ -229,6 +229,7 @@ UserSchema.statics.findOneUser = function(query, resolveIfNotFound) {
 UserSchema.statics.createUser = function(userData, done) {
   var user = new this(userData);
   user.roles ? user.roles : ['authenticated'];
+  user.defaultLanguage = userData.defaultLanguage;
 
   user.save(function(err) {
     if (err) {
@@ -257,7 +258,7 @@ UserSchema.statics.createUser = function(userData, done) {
       return done(err);
     }
 
-    createUserProfile(userData, function(userProfile) {
+    createUserProfile(user, function(userProfile) {
       user.userProfile = userProfile._id;
       user.save()
       .catch(err => console.log('error updating user\'s profile id.', err))

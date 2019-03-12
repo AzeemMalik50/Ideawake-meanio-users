@@ -288,7 +288,7 @@ exports.passwordValidation = function(req, res, next) {
     error.respond(
       res,
       null,
-      'No password in body.',
+      'Please enter password.',
       400
     );
     next();

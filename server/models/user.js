@@ -229,6 +229,7 @@ UserSchema.statics.findOneUser = function(query, resolveIfNotFound) {
 UserSchema.statics.createUser = function(userData, done) {
   var user = new this(userData);
   user.roles ? user.roles : ['authenticated'];
+  user.defaultLanguage = userData.defaultLanguage;
 
   user.save(function(err) {
     if (err) {

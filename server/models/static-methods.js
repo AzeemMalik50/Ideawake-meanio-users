@@ -1,5 +1,7 @@
-const error = require('http-errors-promise');
+const error = require('http-errors-promise')
+const mongoose = require('mongoose');
 const helpers = require('./helper-methods');
+const validator = require('express-validator').validator;
 
 module.exports = {
   user: {
@@ -74,6 +76,42 @@ module.exports = {
         return user.authenticate(password) ?
           Promise.resolve(user) : Promise.reject('Invalid password');
       });
+    },
+
+    signup: function({name, email, defaultLanguage}) {
+        var PlatformSetting = mongoose.model('PlatformSetting');
+
+        return PlatformSetting.get()
+          .then(settings => {
+            if (settings.inviteOnlyMode === true) {
+              return error(null, 'Can sign up only through invites.', 400);
+            }
+
+            if (!name) {
+              return error(null, 'You must enter a name.', 400);
+            }
+
+            if (!validator.isEmail(email)) {
+              return error(null, 'You must enter a valid email address.', 400);
+            }
+
+            if (settings.emailDomains.length) {
+              const emailDomain = email.split('@').pop();
+              if (settings.emailDomains.indexOf(emailDomain) === -1) {
+                return error(null, 'Email not allowed.', 400);
+              }
+            }
+
+            return new Promise((resolve, reject) => {
+              this.createUser({name, email, defaultLanguage}, (err, user) => {
+                if (err) return reject(
+                  error(err, 'Error creating user.', 500, true)
+                );
+
+                resolve(user);
+              });
+            });
+          });
     }
   }
 };

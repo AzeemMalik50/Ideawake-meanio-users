@@ -26,48 +26,66 @@ module.exports = {
         });
     },
 
-    createUser: function(userData, done) {
-      var user = new this(userData);
-      user.roles ? user.roles : ['authenticated'];
-    
-      user.save(function(err) {
-        if (err) {
-          switch (err.code) {
-            case 11000:
-            case 11001:
-              return done([{
-                msg: 'Email or username already taken',
-                param: 'username'
-              }]);
-            default:
-              var modelErrors = [];
-    
-              if (err.errors) {
-                for (var x in err.errors) {
-                  modelErrors.push({
-                    param: x,
-                    msg: err.errors[x].message,
-                    value: err.errors[x].value
-                  });
-                }
-                return done(modelErrors);
-              }
+    createUser: function(userData, settings) {
+      const PlatformSetting = mongoose.model('PlatformSetting');
+      const { name, email } = userData;
+
+      if (!name) {
+        return error(null, 'You must enter a name.', 400);
+      }
+
+      if (!validator.isEmail(email)) {
+        return error(null, 'You must enter a valid email address.', 400);
+      }
+
+      return (settings ? Promise.resolve(settings) : PlatformSetting.get())
+        .then(settings => {
+          if (settings.emailDomains.length) {
+            const emailDomain = email.split('@').pop();
+            if (settings.emailDomains.indexOf(emailDomain) === -1) {
+              return error(null, 'Email not allowed.', 400);
+            }
           }
-          return done(err);
-        }
-    
-        helpers.createUserProfile(user, function(userProfile) {
-          user.userProfile = userProfile._id;
-          user.save()
-            .catch(
-              err => console.log('error updating user\'s profile id.', err)
-            )
-            .finally(() => {
-              user.userProfile = userProfile;
-              done(null, user);
+
+          var user = new this(userData);
+          user.roles ? user.roles : ['authenticated'];
+
+          return user.save()
+            .then(user => {
+              helpers.createUserProfile(user, function(userProfile) {
+                user.userProfile = userProfile._id;
+                return user.save()
+                  .catch(
+                    err => console.log('error updating user\'s profile id.', err)
+                  )
+                  .finally(() => {
+                    user.userProfile = userProfile;
+                    return user;
+                  });
+              });
+            })
+            .catch(err => {
+                switch (err.code) {
+                  case 11000:
+                  case 11001:
+                    return error(err, 'Email already taken.', 400);
+                  default:
+                    var modelErrors = [];
+          
+                    if (err.errors) {
+                      for (var x in err.errors) {
+                        modelErrors.push({
+                          param: x,
+                          msg: err.errors[x].message,
+                          value: err.errors[x].value
+                        });
+                      }
+                      return error(modelErrors, 'Some errors occurred.');
+                    }
+                }
+                return error(err, 'Something went wrong.');
             });
         });
-      });
     },
 
     findAndAuthenticate: function(query, password) {
@@ -79,39 +97,16 @@ module.exports = {
     },
 
     signup: function({name, email, defaultLanguage}) {
-        var PlatformSetting = mongoose.model('PlatformSetting');
+      const PlatformSetting = mongoose.model('PlatformSetting');
 
-        return PlatformSetting.get()
-          .then(settings => {
-            if (settings.inviteOnlyMode === true) {
-              return error(null, 'Can sign up only through invites.', 400);
-            }
+      return PlatformSetting.get()
+        .then(settings => {
+          if (settings.inviteOnlyMode === true) {
+            return error(null, 'Can sign up only through invites.', 400);
+          }
 
-            if (!name) {
-              return error(null, 'You must enter a name.', 400);
-            }
-
-            if (!validator.isEmail(email)) {
-              return error(null, 'You must enter a valid email address.', 400);
-            }
-
-            if (settings.emailDomains.length) {
-              const emailDomain = email.split('@').pop();
-              if (settings.emailDomains.indexOf(emailDomain) === -1) {
-                return error(null, 'Email not allowed.', 400);
-              }
-            }
-
-            return new Promise((resolve, reject) => {
-              this.createUser({name, email, defaultLanguage}, (err, user) => {
-                if (err) return reject(
-                  error(err, 'Error creating user.', 500, true)
-                );
-
-                resolve(user);
-              });
-            });
-          });
+          return this.createUser({name, email, defaultLanguage}, settings);
+        });
     }
   }
 };

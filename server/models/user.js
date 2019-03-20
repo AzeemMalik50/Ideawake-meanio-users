@@ -211,23 +211,28 @@ UserSchema.pre('save', function(next) {
         })
         .catch(err => next(err));
     }
-
-    const PlatformSettings = mongoose.model('PlatformSetting');
-    PlatformSettings.findOne({})
-      .then(settings => {
-        if (
-          !settings.useUserSecondaryEmail
-          || ( settings.useUserSecondaryEmail && this.secondaryEmail )
-        ) {
-          this.sendWelcomeEmail();
-        }
-      })
-      .catch(err => {
-        console.log('Error in fetching platform settings for welcome email');
-      });
   } else {
     next();
   }
+});
+
+
+UserSchema.post('save', (doc, next) => {
+  const PlatformSettings = mongoose.model('PlatformSetting');
+  PlatformSettings.findOne({})
+    .then(settings => {
+      if (
+        !settings.useUserSecondaryEmail
+        || ( settings.useUserSecondaryEmail && this.secondaryEmail )
+      ) {
+        doc.sendWelcomeEmail();
+      }
+    })
+    .catch(err => {
+      console.log('Error in fetching platform settings for welcome email.', err);
+    });
+
+  next();
 });
 
 UserSchema.methods = require('./instance-methods');

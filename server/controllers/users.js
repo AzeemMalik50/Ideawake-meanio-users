@@ -522,6 +522,29 @@ module.exports = function(MeanUser) {
         sendWelcomeEmail: function (req, res) {
             req.user.sendWelcomeEmail();
             res.json({ status: true});
+        },
+
+        redeemInvite: function (req, res, next) {
+            User.redeemInvite(req.params.inviteId, req.body)
+                .then(user => {
+                    req.user = user;
+
+                    MeanUser.events.emit('created', {
+                        action: 'created',
+                        user: {
+                            name: user.name,
+                            username: user.username,
+                            email: user.email
+                        }
+                    });
+
+                    if (req.body && req.body.redirect) {
+                        req.redirect = req.body.redirect;
+                    }
+
+                    next();
+                })
+                .catch(err => error.respond(res, err, 'Error redeeming invite.'));
         }
     };
 }

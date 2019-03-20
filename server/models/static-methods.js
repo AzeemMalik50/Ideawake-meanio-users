@@ -40,7 +40,7 @@ module.exports = {
 
       return (settings ? Promise.resolve(settings) : PlatformSetting.get())
         .then(settings => {
-          if (settings.emailDomains.length) {
+          if ((settings.emailDomains || []).length) {
             const emailDomain = email.split('@').pop();
             if (settings.emailDomains.indexOf(emailDomain) === -1) {
               return error(null, 'Email not allowed.', 400);

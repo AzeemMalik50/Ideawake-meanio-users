@@ -329,6 +329,19 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
       });
       return deferred.promise;
     };
+
+    MeanUserKlass.prototype.redeemInvite = function(inviteId, user) {
+      $http.post('/api/register/invite/' + inviteId, {
+        email: user.email,
+        password: user.password,
+        name: user.name,
+        defaultLanguage: user.defaultLanguage || 'en-US'
+      })
+        .then(this.onIdentity.bind(this))
+        .catch(this.onIdFail.bind(this));
+    };
+
+
     return MeanUser;
   }
 ]);

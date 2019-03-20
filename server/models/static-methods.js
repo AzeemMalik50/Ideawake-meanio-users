@@ -52,7 +52,8 @@ module.exports = {
 
           return user.save()
             .then(user => {
-              return helpers.createUserProfile(user)
+              return Promise.all([
+                helpers.createUserProfile(user)
                 .then(userProfile => {
                   user.userProfile = userProfile._id;
                   return user.save()
@@ -62,9 +63,11 @@ module.exports = {
                     .then(() => {
                       user.userProfile = userProfile;
                       return user;
-                    });
-                })
-                // ignoring profile creation error so that user can continue
+                    })
+                  }),
+                user.sendWelcomeEmail()
+              ])
+                .then(() => user)
                 .catch(() => user);
             })
             .catch(err => {

@@ -217,24 +217,6 @@ UserSchema.pre('save', function(next) {
 });
 
 
-UserSchema.post('save', (doc, next) => {
-  const PlatformSettings = mongoose.model('PlatformSetting');
-  PlatformSettings.findOne({})
-    .then(settings => {
-      if (
-        !settings.useUserSecondaryEmail
-        || ( settings.useUserSecondaryEmail && this.secondaryEmail )
-      ) {
-        doc.sendWelcomeEmail();
-      }
-    })
-    .catch(err => {
-      console.log('Error in fetching platform settings for welcome email.', err);
-    });
-
-  next();
-});
-
 UserSchema.methods = require('./instance-methods');
 UserSchema.statics = require('./static-methods').user;
 

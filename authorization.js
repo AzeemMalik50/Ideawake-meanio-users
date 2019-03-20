@@ -207,12 +207,9 @@ exports.SAMLAuthorization = function(req, res, next) {
             }
             
             req.isUserNew = true;
-            return User.createUser(newUser, function(errors, user) {
-              if (errors && errors.length) {
-                let err = new Error(errors[0].msg);
-                next(err);
-              } else {
-                req.user = user;                
+            return User.createUser(newUser)
+              .then(user => {
+                req.user = user;
                 if (!invite) return next();
                 
                 // if have invites then update user of invites after saml signup  
@@ -223,9 +220,9 @@ exports.SAMLAuthorization = function(req, res, next) {
                   })
                   .catch(err => {
                     next(err);
-                  });                
-              }
-            });
+                  });
+              })
+              .catch(err => next(err));
           })
       } else {
         req.user = user;

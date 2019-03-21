@@ -467,7 +467,38 @@ module.exports = function(UserProfiles, http) {
                 err,
                 message: 'Error updating demographics.'
             }));
-        }
+        },
 
+        leaderboardPerChallenge: function (req, res) {
+            const limit = req.params.limit;
+            UserProfile
+                .find({ 'pointsLog.challengeId': req.params.challengeId })
+                .populate('user', 'name username email roles')
+                .exec(function (err, docs) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ error: 'cannot retrieve leaderboard per challenge' });
+                    }
+
+                    var users = [];
+                    docs.forEach(function (doc) {
+                        if (doc.user && doc.user.roles) {
+                            users.push({
+                                userId: doc.user._id,
+                                userName: doc.user.name,
+                                points: 0
+                            })
+                            doc.pointsLog.forEach(function (points) {
+                                users[users.length - 1].points =
+                                    points.challengeId == req.params.challengeId ?
+                                        users[users.length - 1].points + points.points :
+                                        users[users.length - 1].points;
+                            })
+                        }
+                    });
+                    const sortedUsers = _.orderBy(users, ['points'], ['desc']).slice(0, limit);
+                    res.json(sortedUsers);
+                });
+        }
     };
 };

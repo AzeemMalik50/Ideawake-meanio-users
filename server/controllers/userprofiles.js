@@ -363,7 +363,10 @@ module.exports = function(UserProfiles, http) {
                     'date' : new Date(),
                     'total':doc.points,
                     'points':req.body.points,
-                    'description':req.body.description
+                    'description':req.body.description,
+                    'challengeId': req.body.challengeId,
+                    'ideaId': req.body.ideaId,
+                    'commentId': req.body.commentId
                 }
 
                 if(typeof doc.pointsLog === undefined) {

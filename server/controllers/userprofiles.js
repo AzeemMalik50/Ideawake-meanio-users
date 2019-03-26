@@ -492,6 +492,7 @@ module.exports = function(UserProfiles, http) {
                         if (doc.user && doc.user.roles) {
                             users.push({
                                 userId: doc.user._id,
+                                profileImage: doc.profileImage,
                                 userName: doc.user.name,
                                 points: 0
                             })

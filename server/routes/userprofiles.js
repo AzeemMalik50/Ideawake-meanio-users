@@ -54,7 +54,7 @@ module.exports = function(UserProfiles, app, circles, database, io) {
     .delete(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, userProfiles.destroy);
 
   app.route('/api/userprofiles/fullprofile/:userProfileId')
-    .get(authMWs.requiresAdmin, userProfiles.getFullProfile);
+    .get(authMWs.requiresLogin, userProfiles.getFullProfile);
 
   app.route('/api/userprofiles/update/:userProfileId')
     .put(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, hasPermissions, userProfiles.update);

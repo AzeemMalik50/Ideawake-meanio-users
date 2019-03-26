@@ -417,7 +417,11 @@ module.exports = function(UserProfiles, http) {
                     'date' : new Date(),
                     'total': profile.points,
                      points,
-                    'description': req.body.description
+                    'description': req.body.description,
+                    'description': req.body.description,
+                    'challengeId': req.body.challengeId,
+                    'ideaId': req.body.ideaId,
+                    'commentId': req.body.commentId
                 }
                 if (!profile.pointsLog) profile.pointsLog = [];
                 profile.pointsLog.push(pointLog);

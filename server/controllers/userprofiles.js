@@ -366,7 +366,10 @@ module.exports = function(UserProfiles, http) {
                     'description':req.body.description,
                     'challengeId': req.body.challengeId,
                     'ideaId': req.body.ideaId,
-                    'commentId': req.body.commentId
+                    'commentId': req.body.commentId,
+                    'userId': req.body.userId,
+                    'profileImage': doc.profileImage,
+                    'userName': doc.displayName
                 }
 
                 if(typeof doc.pointsLog === undefined) {
@@ -421,13 +424,19 @@ module.exports = function(UserProfiles, http) {
                     'description': req.body.description,
                     'challengeId': req.body.challengeId,
                     'ideaId': req.body.ideaId,
-                    'commentId': req.body.commentId
+                    'commentId': req.body.commentId,
+                    'userId': req.body.userId,
+                    'profileImage': profile.profileImage,
+                    'userName': profile.displayName        
                 }
                 if (!profile.pointsLog) profile.pointsLog = [];
                 profile.pointsLog.push(pointLog);
                 return profile.save();
               })
-              .then(results => res.json({ success: true }))
+              .then(results => {
+                socket.emit('userPoints' + req.body.userId, pointLog);
+                res.json({ success: true })
+               })
               .catch(err => res.status(500).json({ error: err.toString() }));
         },
 

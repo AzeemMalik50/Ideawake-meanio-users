@@ -429,14 +429,12 @@ module.exports = function(UserProfiles, http) {
                     'profileImage': profile.profileImage,
                     'userName': profile.displayName        
                 }
+                socket.emit('userPoints' + req.body.userId, pointLog);
                 if (!profile.pointsLog) profile.pointsLog = [];
                 profile.pointsLog.push(pointLog);
                 return profile.save();
               })
-              .then(results => {
-                socket.emit('userPoints' + req.body.userId, pointLog);
-                res.json({ success: true })
-               })
+              .then(results => res.json({ success: true }))
               .catch(err => res.status(500).json({ error: err.toString() }));
         },
 

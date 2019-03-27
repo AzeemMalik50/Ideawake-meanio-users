@@ -421,7 +421,6 @@ module.exports = function(UserProfiles, http) {
                     'total': profile.points,
                      points,
                     'description': req.body.description,
-                    'description': req.body.description,
                     'challengeId': req.body.challengeId,
                     'ideaId': req.body.ideaId,
                     'commentId': req.body.commentId,

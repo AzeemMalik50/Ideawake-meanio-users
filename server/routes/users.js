@@ -165,7 +165,7 @@ module.exports = function (MeanUser, app, circles, database, passport) {
     app.route('/api/register')
       .post(
         MWs.passwordValidation,
-        users.create,
+        users.signup,
         authTokenMW(MeanUser),
         MWs.generateRefreshToken,
         function (req, res) {
@@ -178,6 +178,23 @@ module.exports = function (MeanUser, app, circles, database, passport) {
           });
         }
       );
+
+      app.route('/api/register/invite/:inviteId')
+        .post(
+          MWs.passwordValidation,
+          users.redeemInvite,
+          authTokenMW(MeanUser),
+          MWs.generateRefreshToken,
+          function (req, res) {
+            console.log(req.user, 'req.user');
+            res.json({
+              token: req.token,
+              user: req.user,
+              refreshToken : req.refreshToken,
+              redirect: req.redirect || config.strategies.landingPage
+            });
+          }
+        );
 
     app.route('/api/forgot-password')
       .post(users.forgotpassword);

@@ -63,6 +63,8 @@ module.exports = function(UserProfiles, app, circles, database, io) {
   app.route('/api/userprofiles/:userProfileId/demographics')
     .put(hasAuthorization, userProfiles.updateDemographicsAndLanguage);
 
+  app.route('/api/leaderboardPerChallenge/:challengeId/:limit').get(userProfiles.leaderboardPerChallenge);
+
   // Finish with setting up the articleId param
   app.param('userProfileId', userProfiles.userProfile);
 

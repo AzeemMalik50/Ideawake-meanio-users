@@ -16,6 +16,8 @@ var mongoose = require('mongoose'),
   jwt = require('jsonwebtoken'),
   mailer; //https://npmjs.org/package/node-jsonwebtoken
 
+const error = require('http-errors-promise');
+
 // Temporary work-around for circular dependency
 setTimeout(() => mailer = require('../../../../services/mailer')(), 2000);
 
@@ -196,72 +198,27 @@ module.exports = function(MeanUser) {
         /**
          * Create user
          */
-        create: function(req, res, next) {
+        signup: function(req, res, next) {
+            User.signup(req.body)
+                .then(user => {
+                    req.user = user;
 
-            var db = mongoose.connection;
-            var collection = db.collection('platformsettings');
-            var platformSettings = {};
-
-            collection.find().toArray(function(err, result) {
-                if (result && result.length > 0) {
-                    platformSettings = result[0];
-                    if (platformSettings.inviteOnlyMode === true && req.body.inviteId === null) {
-                        console.log('BAILING OUT!!!!!');
-                        return res.status(400);
-                    }
-                    req.body.provider = 'local';
-
-                    // because we set our user.provider to local our models/user.js validation will always be true
-                    req.assert('name', 'You must enter a name').notEmpty();
-                    req.assert('email', 'You must enter a valid email address').isEmail();
-                    // req.assert('username', 'Username cannot be more than 20 characters').len(1, 20);
-                    // req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
-
-
-                    var errors = req.validationErrors();
-
-                    const platFormEmailDomains = platformSettings.emailDomains;
-                    if (platFormEmailDomains && platFormEmailDomains.length) {
-                        const emailDomain = req.body.email.split('@').pop();
-                        if (platFormEmailDomains.indexOf(emailDomain) === -1) {
-                            errors = errors || [];
-                            errors.push({
-                              param: 'email',
-                              msg: 'Email not allowed',
-                              value: req.body.email
-                          });
-                        }
-                    }
-
-                    if (errors) {
-                        return res.status(400).send(errors);
-                    }
-
-
-                    User.createUser(req.body, function(err, user) {
-                        if (err) {
-                            return res.status(400).json(err);
-                        } else {
-                            req.user = user;
-
-                            MeanUser.events.emit('created', {
-                                action: 'created',
-                                user: {
-                                    name: user.name,
-                                    username: user.username,
-                                    email: user.email
-                                }
-                            });
-
-                            if (req.body && req.body.redirect) {
-                                req.redirect = req.body.redirect
-                            }
-
-                            next();
+                    MeanUser.events.emit('created', {
+                        action: 'created',
+                        user: {
+                            name: user.name,
+                            username: user.username,
+                            email: user.email
                         }
                     });
-                }
-            });
+
+                    if (req.body && req.body.redirect) {
+                        req.redirect = req.body.redirect;
+                    }
+
+                    next();
+                })
+                .catch(err => error.respond(res, err, 'Error signing up.'));
         },
         loggedin: function (req, res) {
             if (!req.isAuthenticated()) return res.send('0');
@@ -565,6 +522,29 @@ module.exports = function(MeanUser) {
         sendWelcomeEmail: function (req, res) {
             req.user.sendWelcomeEmail();
             res.json({ status: true});
+        },
+
+        redeemInvite: function (req, res, next) {
+            User.redeemInvite(req.params.inviteId, req.body)
+                .then(user => {
+                    req.user = user;
+
+                    MeanUser.events.emit('created', {
+                        action: 'created',
+                        user: {
+                            name: user.name,
+                            username: user.username,
+                            email: user.email
+                        }
+                    });
+
+                    if (req.body && req.body.redirect) {
+                        req.redirect = req.body.redirect;
+                    }
+
+                    next();
+                })
+                .catch(err => error.respond(res, err, 'Error redeeming invite.'));
         }
     };
 }

@@ -27,26 +27,34 @@ var hasPermissions = function(req, res, next) {
 module.exports = function(UserProfiles, app, circles, database, io) {
 
   var userProfiles = require('../controllers/userprofiles')(UserProfiles);
-
-  app.route('/api/userProfileCurrentUser').get(userProfiles.userProfileCurrentUser);
+  const authMWs = require('../../authorization');
 
   app.route('/api/userprofiles')
-    .get(userProfiles.all)
-    .post(/*auth.requiresLogin,*/ hasPermissions, userProfiles.create);
+  .get(authMWs.requiresAdmin, userProfiles.all)
+  .post(authMWs.requiresAdmin, userProfiles.create);
+
+  app.route('/api/userprofiles/me')
+    .get(authMWs.requiresLogin, userProfiles.userProfileCurrentUser);
+
   app.route('/api/userProfiles/points/add')
-    .post(/*auth.requiresLogin,*/ hasPermissions, userProfiles.addPoints);
+    .post(authMWs.requiresLogin, userProfiles.addPoints);
+
   app.route('/api/userProfiles/points/remove')
-    .post(/*auth.requiresLogin,*/ hasPermissions, userProfiles.removePoints);
-  app.route('/api/leaderboard').get(userProfiles.leaderboard);
-   // .put(/*auth.isMongoId,*/ auth.requiresLogin, hasAuthorization, hasPermissions, userProfiles.update)
-   // .delete(/*auth.isMongoId,*/ auth.requiresLogin, hasAuthorization, userProfiles.destroy);
-  app.route('/api/userprofiles/search').get(userProfiles.search);
+    .post(authMWs.requiresLogin, hasPermissions, userProfiles.removePoints);
+
+  app.route('/api/leaderboard')
+    .get(authMWs.requiresLogin, userProfiles.leaderboard);
+
+  app.route('/api/userprofiles/search')
+    .get(authMWs.requiresLogin, userProfiles.search);
+
   app.route('/api/userprofiles/:userProfileId')
     .get(userProfiles.show)
     .put(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, hasPermissions, userProfiles.update)
     .delete(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, userProfiles.destroy);
 
-  app.route('/api/userprofiles/fullprofile/:userProfileId').get(userProfiles.getFullProfile);
+  app.route('/api/userprofiles/fullprofile/:userProfileId')
+    .get(authMWs.requiresLogin, userProfiles.getFullProfile);
 
   app.route('/api/userprofiles/update/:userProfileId')
     .put(/*auth.isMongoId, auth.requiresLogin,*/ hasAuthorization, hasPermissions, userProfiles.update);
@@ -54,6 +62,8 @@ module.exports = function(UserProfiles, app, circles, database, io) {
 
   app.route('/api/userprofiles/:userProfileId/demographics')
     .put(hasAuthorization, userProfiles.updateDemographicsAndLanguage);
+
+  app.route('/api/leaderboardPerChallenge/:challengeId/:limit').get(userProfiles.leaderboardPerChallenge);
 
   // Finish with setting up the articleId param
   app.param('userProfileId', userProfiles.userProfile);

@@ -121,7 +121,7 @@ module.exports = {
       if (!inviteId) return error(null, 'Invite id is required.', 400);
 
       return Invites.get({_id: inviteId})
-        .then(([{status, email, roles}]) => {
+        .then(([{status, email, roles, teamIdea}]) => {
           if (status === 'accepted') {
             return error(null, 'This invite has already been accepted.', 400);
           }
@@ -142,7 +142,10 @@ module.exports = {
                 { _id: inviteId },
                 { $set: { status: 'accepted' } }
               ).exec();
-            });
+            })
+            .then(user => ({
+              user, teamIdea
+            }));
         });
     }
   }

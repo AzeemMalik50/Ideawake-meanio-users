@@ -117,11 +117,12 @@ module.exports = {
 
     redeemInvite: function(inviteId, {name, defaultLanguage, password}) {
       const Invites = mongoose.model('Invite');
+      const Ideas = mongoose.model('Idea');
 
       if (!inviteId) return error(null, 'Invite id is required.', 400);
 
       return Invites.get({_id: inviteId})
-        .then(([{status, email, roles, teamIdea}]) => {
+        .then(([{_id, status, email, roles, teamIdea}]) => {
           if (status === 'accepted') {
             return error(null, 'This invite has already been accepted.', 400);
           }
@@ -143,9 +144,19 @@ module.exports = {
                 { $set: { status: 'accepted' } }
               ).exec();
             })
-            .then(user => ({
-              user, teamIdea
-            }));
+            .then(user => {
+              let teamPromise = Promise.resolve();
+              if (teamIdea) {
+                teamPromise = Ideas.makePendingMemberPermanent(
+                  teamIdea, _id, user._id, true
+                );
+              }
+
+              return teamPromise
+                .then(() => ({
+                  user, teamIdea
+                }));
+            });
         });
     }
   }

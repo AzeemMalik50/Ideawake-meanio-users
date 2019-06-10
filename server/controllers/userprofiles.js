@@ -495,7 +495,7 @@ module.exports = function(UserProfiles, http) {
 
                     var users = [];
                     docs.forEach(function (doc) {
-                        if (doc.user && doc.user.roles) {
+                        if (doc.user && doc.user.roles && doc.user.roles.indexOf('admin') === -1) {
                             users.push({
                                 userId: doc.user._id,
                                 profileImage: doc.profileImage,

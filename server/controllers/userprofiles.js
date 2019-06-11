@@ -369,7 +369,8 @@ module.exports = function(UserProfiles, http) {
                     'commentId': req.body.commentId,
                     'userId': req.body.userId,
                     'profileImage': doc.profileImage,
-                    'userName': doc.displayName
+                    'userName': doc.displayName,
+                    'userRoles': req.body.userRoles
                 }
 
                 if(typeof doc.pointsLog === undefined) {
@@ -426,7 +427,8 @@ module.exports = function(UserProfiles, http) {
                     'commentId': req.body.commentId,
                     'userId': req.body.userId,
                     'profileImage': profile.profileImage,
-                    'userName': profile.displayName        
+                    'userName': profile.displayName,
+                    'userRoles': req.body.userRoles        
                 }
                 socket.emit('userPoints' + req.body.userId, pointLog);
                 if (!profile.pointsLog) profile.pointsLog = [];

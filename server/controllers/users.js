@@ -526,7 +526,7 @@ module.exports = function(MeanUser) {
 
         redeemInvite: function (req, res, next) {
             User.redeemInvite(req.params.inviteId, req.body)
-                .then(user => {
+                .then(({user, teamIdea}) => {
                     req.user = user;
 
                     MeanUser.events.emit('created', {
@@ -538,7 +538,9 @@ module.exports = function(MeanUser) {
                         }
                     });
 
-                    if (req.body && req.body.redirect) {
+                    if (teamIdea) {
+                        req.redirect = `/ideas/${teamIdea.toString()}`;
+                    } else if (req.body && req.body.redirect) {
                         req.redirect = req.body.redirect;
                     }
 

@@ -27,6 +27,11 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
         var rft = localStorage.getItem('rft');
         var user;
 
+        const queryParams = $location.search();
+        if (queryParams.email === 'true' && queryParams.inviteId) {
+          $window.location.href = `auth/invite/accept/${queryParams.inviteId}`;
+        }  
+
         const loggedOutUrls = ['/', '/signup', '/auth/login', '/forgotpassword', '/privacy', '/tos', '/contact', '/saml/auth'];
         if (!lcJwt && !_.includes(loggedOutUrls, $location.$$path) && !$location.$$path.includes('/reset') && !$location.$$path.includes('/invite/accept')) {
           clearTokensAndRedirectToLogin($location);

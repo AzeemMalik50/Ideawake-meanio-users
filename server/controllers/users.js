@@ -16,7 +16,7 @@ var mongoose = require('mongoose'),
     jwt = require('jsonwebtoken'),
     mailer; //https://npmjs.org/package/node-jsonwebtoken
 
-// require('../../../../../ideawake/packages/custom/invites/server/models/invite');
+require('../../../../packages/custom/invites/server/models/invite');
 const Invite = mongoose.model('Invite');
 const error = require('http-errors-promise');
 

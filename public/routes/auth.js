@@ -21,7 +21,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
       $location.url('/auth/login');
     }
 
-    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', '$http', 'jwtHelper', function ($cookies, $location, $http, jwtHelper) {
+    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', '$window', '$http', 'jwtHelper', function ($cookies, $location, $window, $http, jwtHelper) {
       if (localStorageTest()) {
         var lcJwt = localStorage.getItem('JWT');
         var rft = localStorage.getItem('rft');

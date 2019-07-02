@@ -29,6 +29,7 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
 
         const queryParams = $location.search();
         if (queryParams.email === 'true' && queryParams.inviteId) {
+          sessionStorage.setItem('locationURL', $location.url());  
           $window.location.href = `auth/invite/accept/${queryParams.inviteId}`;
         }  
 

@@ -21,11 +21,17 @@ angular.module('mean.users').config(['$httpProvider', 'jwtInterceptorProvider',
       $location.url('/auth/login');
     }
 
-    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', '$http', 'jwtHelper', function ($cookies, $location, $http, jwtHelper) {
+    jwtInterceptorProvider.tokenGetter = ['$cookies', '$location', '$window', '$http', 'jwtHelper', function ($cookies, $location, $window, $http, jwtHelper) {
       if (localStorageTest()) {
         var lcJwt = localStorage.getItem('JWT');
         var rft = localStorage.getItem('rft');
         var user;
+
+        const queryParams = $location.search();
+        if (queryParams.email === 'true' && queryParams.inviteId) {
+          sessionStorage.setItem('locationURL', $location.url());  
+          $window.location.href = `auth/invite/accept/${queryParams.inviteId}`;
+        }  
 
         const loggedOutUrls = ['/', '/signup', '/auth/login', '/forgotpassword', '/privacy', '/tos', '/contact', '/saml/auth'];
         if (!lcJwt && !_.includes(loggedOutUrls, $location.$$path) && !$location.$$path.includes('/reset') && !$location.$$path.includes('/invite/accept')) {

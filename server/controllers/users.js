@@ -18,7 +18,7 @@ var mongoose = require('mongoose'),
 
 const error = require('http-errors-promise');
 require('../../../../packages/custom/invites/server/models/invite');
-require('../../../../../ideawake/packages/custom/notifications/server/model/notifications');
+require('../../../../packages/custom/notifications/server/model/notifications');
 const Invite = mongoose.model('Invite');
 const Notification = mongoose.model('Notification');
 

@@ -331,10 +331,16 @@ angular.module('mean.users').factory('MeanUser', [ '$rootScope', '$http', '$loca
     };
 
     MeanUserKlass.prototype.redeemInvite = function(inviteId, user) {
+      const locationURL = sessionStorage.getItem('locationURL');
+      if (locationURL) {
+        var redirect = locationURL.split("?")[0];
+      }
+
       $http.post('/api/register/invite/' + inviteId, {
         password: user.password,
         name: user.name,
-        defaultLanguage: user.defaultLanguage || 'en-US'
+        defaultLanguage: user.defaultLanguage || 'en-US',
+        redirect
       })
         .then(this.onIdentity.bind(this))
         .catch(this.onIdFail.bind(this));

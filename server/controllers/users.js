@@ -555,7 +555,12 @@ module.exports = function(MeanUser) {
                     req.user = user;
 
                     //this should go somewhere else????
-                    Notification.update({ inviteId: req.params.inviteId }, { $set: { user: user._id } }, { upsert: true })
+                    Notification
+                    .update(
+                        { inviteId: req.params.inviteId }, 
+                        { $set: { user: user._id } }, 
+                        { upsert: true }
+                    )
                     .exec();  
 
                     MeanUser.events.emit('created', {

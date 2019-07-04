@@ -551,13 +551,13 @@ module.exports = function(MeanUser) {
 
         redeemInvite: function (req, res, next) {
             User.redeemInvite(req.params.inviteId, req.body)
-                .then(({user, teamIdea}) => {
-                    req.user = user;
+                .then(({ user, teamIdea }) => {
+                    req.user = user;     
 
                     //this should go somewhere else????
                     Notification
-                    .update(
-                        { inviteId: req.params.inviteId }, 
+                    .findByIdAndUpdate(
+                        req.params.inviteId, 
                         { $set: { user: user._id } }, 
                         { upsert: true }
                     )

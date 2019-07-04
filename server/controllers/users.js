@@ -17,6 +17,10 @@ var mongoose = require('mongoose'),
   mailer; //https://npmjs.org/package/node-jsonwebtoken
 
 const error = require('http-errors-promise');
+require('../../../../packages/custom/invites/server/models/invite');
+require('../../../../../ideawake/packages/custom/notifications/server/model/notifications');
+const Invite = mongoose.model('Invite');
+const Notification = mongoose.model('Notification');
 
 // Temporary work-around for circular dependency
 setTimeout(() => mailer = require('../../../../services/mailer')(), 2000);
@@ -284,60 +288,81 @@ module.exports = function(MeanUser) {
                 next();
             });
         },
-        search: function(req,res) {
-					const pageNum = req.body.pageNum || 1;
-					const limit = (req.body.limit) ? parseInt(req.body.limit) : 10;
-					const skip = (pageNum - 1) * limit;
-					const exclude = req.body.exclude || [];
-					const filters = {};
-          const searchText = req.body.searchText || "";
-          const roles = req.body.roles;
-          const usernames = req.body.usernames;
-          const allowSelf = req.body.allowSelf;
-          const paginate = typeof req.body.paginate === 'undefined' ? true : req.body.paginate;
+        search: function (req, res) {
+            const pageNum = req.body.pageNum || 1;
+            const limit = (req.body.limit) ? parseInt(req.body.limit) : 10;
+            const skip = (pageNum - 1) * limit;
+            const exclude = req.body.exclude || [];
+            const filters = {};
+            const searchText = req.body.searchText || "";
+            const roles = req.body.roles;
+            const usernames = req.body.usernames;
+            const allowSelf = req.body.allowSelf;
+            const paginate = typeof req.body.paginate === 'undefined' ? true : req.body.paginate;
 
-					if (searchText) {
-            const regex = new RegExp(searchText,"gi");
-						filters['$or'] = [
-              { name: regex },
-              { email: regex },
-              { username: regex }
-						];
-					}
-
-
-          if (roles && roles.length) {
-            filters['roles'] = {
-              $in: roles
+            if (searchText) {
+                const regex = new RegExp(searchText, "gi");
+                filters['$or'] = [
+                    { name: regex },
+                    { email: regex },
+                    { username: regex }
+                ];
             }
-          }
 
-          if (usernames && usernames.length) {
-            filters['username'] = {
-              $in: usernames
+
+            if (roles && roles.length) {
+                filters['roles'] = {
+                    $in: roles
+                }
             }
-          }
 
-          if (!allowSelf) {
-            //exclude current loggedIn user as well the user sent from front-end
-            exclude.push(req.user._id);
-            filters["_id"] = {
-                "$nin": exclude
-            };
-          }
-
-					const query = User.find(filters)
-            .lean()
-            .select("username name email")
-            .sort('name');
-            if (paginate) {
-              query.skip(skip)
-						  .limit(limit);
+            if (usernames && usernames.length) {
+                filters['username'] = {
+                    $in: usernames
+                }
             }
-						query
-						.exec()
-						.then(users => res.json({ users }))
-						.catch(err => console.log(`Error: ${err}`));
+
+            if (!allowSelf) {
+                //exclude current loggedIn user as well the user sent from front-end
+                exclude.push(req.user._id);
+                filters["_id"] = {
+                    "$nin": exclude
+                };
+            }
+
+            return Promise.all([
+                User.find(filters)
+                    .lean()
+                    .select("username name email")
+                    .populate({
+                        path: 'userProfile',
+                        ref: 'UserProfile',
+                        select: 'profileImage'
+                    })
+                    .sort('name')
+                    .skip(skip)
+                    .limit(limit)
+                    .exec(),
+
+                Invite.find(filters)
+                    .find({ status: 'pending' })
+                    .select("name email")
+                    .sort('name')
+                    .skip(skip)
+                    .limit(limit)
+                    .exec()
+            ])
+                .then(([active, pending]) => {
+                    active.push(...pending.map(i => {
+                        i._doc.isPending = true;
+                        return i;
+                    }));
+
+                    res.json({ users: active });
+                })
+                .catch(err => error.respond(
+                    res, err, 'Error searching active and pending users.'
+                ));
         },
         /**
        * Loads a user into the request
@@ -528,6 +553,10 @@ module.exports = function(MeanUser) {
             User.redeemInvite(req.params.inviteId, req.body)
                 .then(({user, teamIdea}) => {
                     req.user = user;
+
+                    //this should go somewhere else????
+                    Notification.update({ inviteId: req.params.inviteId }, { $set: { user: user._id } }, { upsert: true })
+                    .exec();  
 
                     MeanUser.events.emit('created', {
                         action: 'created',

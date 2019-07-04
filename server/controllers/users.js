@@ -17,10 +17,8 @@ var mongoose = require('mongoose'),
     mailer; //https://npmjs.org/package/node-jsonwebtoken
 
 require('../../../../packages/custom/invites/server/models/invite');
-require('../../../../../ideawake/packages/custom/notifications/server/model/notifications');
 const Invite = mongoose.model('Invite');
 const error = require('http-errors-promise');
-const Notification = mongoose.model('Notification');
 
 // Temporary work-around for circular dependency
 setTimeout(() => mailer = require('../../../../services/mailer')(), 2000);
@@ -552,11 +550,7 @@ module.exports = function (MeanUser) {
         redeemInvite: function (req, res, next) {
             User.redeemInvite(req.params.inviteId, req.body)
                 .then(({ user, teamIdea }) => {
-                    req.user = user;
-
-                    //this should go somewhere else????
-                    Notification.update({ inviteId: req.params.inviteId }, { $set: { user: user._id } }, { upsert: true })
-                    .exec();                    
+                    req.user = user;     
 
                     MeanUser.events.emit('created', {
                         action: 'created',
